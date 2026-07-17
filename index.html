@@ -1,1 +1,222 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B3D0B">
+<!-- OG TAGS FOR SOCIAL MEDIA PREVIEW LIKE GOFUNDME -->
+<meta id="ogSite" property="og:site_name" content="Yamba Muno">
+<meta id="ogTitle" property="og:title" content="Yamba Muno - Transparent Fundraising Uganda">
+<meta id="ogDesc" property="og:description" content="Support someone in need through Yamba Muno">
+<meta id="ogImg" property="og:image" content="https://i.imgur.com/8Km9tLL.png">
+<meta id="ogUrl" property="og:url" content="https://socialaction80-yamba-muno.github.io/Uganda/">
+<meta property="og:type" content="website">
+<title>Yamba Muno</title>
+<style>
+:root{--green:#0B3D0B;--gold:#D4AF37;--light:#F8F9FA;--danger:#B00020;--gray:#6c757d}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:var(--light);color:#222;padding-bottom:80px}
+header{background:var(--green);color:white;padding:16px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+header h1{font-size:24px;letter-spacing:1px}
+.container{max-width:720px;margin:20px auto;padding:16px}
+.card{background:white;border-radius:12px;padding:24px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+h2,h3,h4{color:var(--green);margin-bottom:12px;font-weight:600}
+input,textarea,select{width:100%;padding:14px;margin:10px 0;border:1px solid #ddd;border-radius:8px;font-size:16px;background:#fff}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+button{background:var(--green);color:white;padding:16px;border:none;border-radius:8px;cursor:pointer;font-weight:700;width:100%;font-size:16px;margin-top:10px;transition:0.2s}
+button:hover{opacity:0.9} button:disabled{opacity:0.6}
+.btn-gold{background:var(--gold);color:#000}.btn-donate{background:var(--gold);color:#000;font-size:20px;font-weight:800}
+.btn-whatsapp{background:#25D366}.btn-danger{background:var(--danger)}.btn-outline{background:white;color:var(--green);border:2px solid var(--green)}
+.hidden{display:none} img{max-width:100%;border-radius:12px;margin:12px 0} #previewImg{max-height:300px;object-fit:cover;width:100%}
+.progress{height:24px;background:#e9ecef;border-radius:12px;overflow:hidden;margin:16px 0}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--green),#1a5c1a);text-align:center;color:white;font-size:13px;line-height:24px;font-weight:bold}
+.fee-box{background:#E8F5E9;border-left:4px solid var(--green);padding:14px;border-radius:8px;font-size:14px}
+.payout-admin{background:#FFF3E0;border-left:4px solid var(--gold);padding:14px;border-radius:8px;font-size:14px;margin:10px 0}
+.checkbox-group{display:flex;align-items:start;gap:12px;margin:16px 0;padding:14px;background:#F8F9FA;border-radius:8px;font-size:14px}
+.success-box{background:#E8F5E9;border:2px solid var(--green);padding:20px;border-radius:12px;text-align:center}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:14px 24px;border-radius:8px;z-index:99;font-weight:600}
+.floating-cc{position:fixed;bottom:20px;right:20px;z-index:50}
+.floating-cc a{display:flex;align-items:center;justify-content:center;width:60px;height:60px;background:#25D366;border-radius:50%;box-shadow:0 4px 16px rgba(0,0,0,0.3);font-size:30px;text-decoration:none}
+.phone-input{display:flex}.phone-input div{padding:14px;background:#eee;border-radius:8px 0 0 8px;font-weight:600}
+.phone-input input{border-radius:0 8px 8px 0}
+.small-text{font-size:12px;color:var(--gray)}
+</style>
+</head>
+<body>
+<header><div><h1>YAMBA MUNO</h1><p style="font-size:13px">SOCIAL ACTION FUNDRAISING UGANDA</p></div></header>
+<div class="container"><div id="app"><div class="card">Loading...</div></div><div id="dashboard" class="hidden"></div><div id="donorPage" class="hidden"></div></div>
+
+<!-- CUSTOMER CARE -->
+<div id="customerCare" class="floating-cc hidden"><a href="https://wa.me/256780420041" target="_blank">💬</a></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyApNYOw-a9w7m51JCCOhP0EVRiVyx5JPrw",
+  authDomain: "yamba-muno.firebaseapp.com",
+  databaseURL: "https://yamba-muno-default-rtdb.firebaseio.com",
+  projectId: "yamba-muno",
+  storageBucket: "yamba-muno.firebasestorage.app",
+  messagingSenderId: "507076898780",
+  appId: "1:507076898780:web:c742dfcadbe635a568a919"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const dbRef = ref(db);
+
+let currentUser=JSON.parse(sessionStorage.getItem('ym_current'))||null;
+const PLATFORM_PERCENT=9; const DEFAULT_IMG = "https://i.imgur.com/8Km9tLL.png";
+const BASE_URL = "https://socialaction80-yamba-muno.github.io/Uganda/";
+
+init();
+async function init(){ showPage(); }
+
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+function saveSession(user){currentUser=user;sessionStorage.setItem('ym_current',JSON.stringify(user));}
+function slugify(text){return text.toString().toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').substring(0,50);}
+function formatPhone(n){return"+256"+n.replace(/\D/g,'').slice(-9);}
+function showCC(){document.getElementById('customerCare').classList.remove('hidden')}
+function hideCC(){document.getElementById('customerCare').classList.add('hidden')}
+
+async function showPage(){
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.has('f')){ await showDonorPage(urlParams.get('f')); showCC(); } // PAGE 3: DONOR
+  else if(currentUser){ await showDashboard(); showCC(); } // PAGE 1 & 2: USER
+  else{ hideCC(); showAuthPage(); }
+}
+
+// AUTH
+function showAuthPage(){
+  document.getElementById('app').innerHTML=`<div class="card"><h2>Start Your Fundraiser</h2><input id="authName" placeholder="Your Full Names" required>
+  <label class="small-text">Enter 9 digits only. We add +256 automatically</label>
+  <div class="phone-input"><div>+256</div><input id="authPhone" placeholder="788417769" maxlength="9" inputmode="numeric" required></div>
+  <input id="authPass" type="password" placeholder="Create Password" required><button onclick="signup()">Create Account</button><button onclick="login()" style="background:#555">Login</button></div>`;
+}
+window.signup=async function(){
+  if(!authName.value||!authPhone.value||!authPass.value)return toast("Fill all fields");
+  if(authPhone.value.length!=9)return toast("Enter 9 digits only");
+  const id=Date.now().toString();
+  await set(ref(db,'users/'+id),{name:authName.value,phone:formatPhone(authPhone.value),pass:authPass.value,id,created:Date.now()});
+  toast("Account Created! Login now"); location.reload();
+}
+window.login=async function(){
+  const phone=formatPhone(authPhone.value); const pass=authPass.value;
+  const snap=await get(child(dbRef,'users/')); let user=null;
+  if(snap.exists()){snap.forEach(c=>{if(c.val().phone==phone&&c.val().pass==pass)user=c.val()})};
+  if(!user) return toast("Wrong phone or password");
+  saveSession(user); await showDashboard();
+}
+window.logout=function(){currentUser=null;sessionStorage.clear();hideCC();location.href=BASE_URL;}
+
+// PAGE 1: USER DASHBOARD + CREATE FORM
+window.showDashboard=async function(){
+  document.getElementById('app').classList.add('hidden');document.getElementById('donorPage').classList.add('hidden');document.getElementById('dashboard').classList.remove('hidden');
+
+  const fundsSnap=await get(child(dbRef,'fundraisers/'));
+  let myFund=null; if(fundsSnap.exists()){fundsSnap.forEach(c=>{if(c.val().userId==currentUser.id)myFund=c.val()})}
+
+  const donsSnap=await get(child(dbRef,'donations/')); let myDons=[]; if(donsSnap.exists()){donsSnap.forEach(d=>{if(d.val().fundId==myFund?.id && d.val().status=="Verified")myDons.push(d.val())})}
+  let gross=myDons.reduce((a,b)=>a+b.amount,0); let platformFee=Math.round(gross*PLATFORM_PERCENT/100); let net=gross-platformFee;
+
+  let section="";
+  if(myFund){
+    const link=`${BASE_URL}?f=${myFund.slug}`;
+    section=`<div class="success-box"><h3>🎉 Your Fundraiser is LIVE!</h3><p>Share this link. Anyone who opens it will see your story.</p><input value="${link}" readonly style="text-align:center;font-weight:bold"><div class="share-grid"><button class="btn-whatsapp" onclick="shareWA('${link}','${myFund.title}')">Share to WhatsApp</button><button class="btn-gold" onclick="copyShare('${link}')">Copy Link</button></div><button class="btn-outline" onclick="window.open('${link}','_blank')">👁️ Preview Donor Page</button></div>
+
+    <div class="card"><h2>${myFund.title}</h2>${myFund.media?`<img src="${myFund.media}">`:""}<p style="line-height:1.6">${myFund.story}</p><h3>Goal: ${myFund.target.toLocaleString()} UGX</h3><div class="progress"><div class="progress-bar" style="width:${Math.min(100,Math.round(gross/myFund.target*100))}%">${Math.min(100,Math.round(gross/myFund.target*100))}% Raised</div></div></div>
+
+    <button class="btn-gold" onclick="showPayoutPage()">💰 Page 2: My Earnings & Payout Details</button>`;
+  }
+
+  document.getElementById('dashboard').innerHTML=`<div class="card"><h2>Welcome, ${currentUser.name}</h2><button class="btn-danger" onclick="logout()">Logout</button></div>${!myFund?`<div class="card"><h3>Create Your Fundraiser</h3><input id="fundTitle" placeholder="Fundraiser Title: e.g Medical Help for John" required><input id="fundTarget" type="number" placeholder="Total Amount Needed UGX" inputmode="numeric" required><textarea id="fundStory" placeholder="Tell your story. Why do you need support?" rows="5" required></textarea>
+  <label><b>Upload Cover Photo</b></label><input id="fundMedia" type="file" accept="image/*" onchange="previewImage(event)"><img id="previewImg" class="hidden">
+  <h4>Payout Method</h4><select id="payoutMethod" onchange="showPayout()" required><option value="">Select How You Want Money</option><option value="MTN">MTN Mobile Money</option><option value="Airtel">Airtel Money</option><option value="Bank">Bank Account</option></select><div id="payoutFields"></div>
+  <div class="checkbox-group"><input type="checkbox" id="agreeTerms"><label><b>I agree:</b> Yamba Muno will collect donations. 9% platform fee applies.</label></div>
+  <button class="btn-gold" onclick="launchFundraiser(this)">🚀 Launch Fundraiser Now</button></div>`:section}`;
+}
+
+window.previewImage=function(e){const file=e.target.files[0]; if(file){const rd=new FileReader(); rd.onload=ev=>{previewImg.src=ev.target.result; previewImg.classList.remove('hidden');}; rd.readAsDataURL(file);}}
+window.showPayout=function(){const m=payoutMethod.value; if(m=="MTN"||m=="Airtel"){payoutFields.innerHTML=`<label class="small-text">Enter 9 digits only</label><div class="phone-input"><div>${m}</div><input id="payoutNumber" maxlength="9" placeholder="788417769" inputmode="numeric" required></div><input id="payoutNames" placeholder="Names on Mobile Money" required>`} else if(m=="Bank"){payoutFields.innerHTML=`<input id="bankName" placeholder="Bank Name" required><input id="bankHolder" placeholder="Account Name" required><input id="bankAccount" placeholder="Account Number" required>`} else{payoutFields.innerHTML=""}}
+
+// PAGE 2: PAYOUTS - PRIVATE
+window.showPayoutPage=async function(){
+  const fundsSnap=await get(child(dbRef,'fundraisers/')); let myFund=null; if(fundsSnap.exists()){fundsSnap.forEach(c=>{if(c.val().userId==currentUser.id)myFund=c.val()})}
+  const donsSnap=await get(child(dbRef,'donations/')); let myDons=[]; if(donsSnap.exists()){donsSnap.forEach(d=>{if(d.val().fundId==myFund?.id && d.val().status=="Verified")myDons.push(d.val())})}
+  let gross=myDons.reduce((a,b)=>a+b.amount,0); let platformFee=Math.round(gross*PLATFORM_PERCENT/100); let net=gross-platformFee;
+
+  document.getElementById('dashboard').innerHTML=`<div class="card"><h2>💰 Page 2: My Earnings</h2><p>Total Raised: <b>${gross.toLocaleString()} UGX</b></p><p>Yamba Muno Fee 9%: <b>-${platformFee.toLocaleString()} UGX</b></p><div class="payout-admin"><h3>YOU RECEIVE: ${net.toLocaleString()} UGX</h3></div></div>
+  <div class="card"><h3>🔒 Payout Details - Private</h3><div class="payout-admin"><b>Method:</b> ${myFund.payoutMethod}<br><b>Details:</b> ${JSON.stringify(myFund.payoutDetails)}</div><p class="small-text">Donors cannot see this information.</p></div>
+  <button class="btn-outline" onclick="showDashboard()">← Back to Dashboard</button>`;
+}
+
+// LAUNCH: SAVES + GENERATES LINK + GOES TO PAGE 3 DONOR
+window.launchFundraiser=async function(btn){
+  const originalText = btn.innerText; btn.disabled=true; btn.innerText="Generating Your Link...";
+  try{
+    if(!agreeTerms.checked) throw new Error("You must agree to terms");
+    const title = fundTitle.value.trim(); const target = fundTarget.value; const story = fundStory.value.trim(); const method = payoutMethod.value;
+    if(!title||!target||!method) throw new Error("Fill Title, Target and Payout Method");
+    if(+target < 10000) throw new Error("Target must be at least 10,000 UGX");
+
+    btn.innerText="Saving...";
+    const id=push(child(dbRef,'fundraisers/')).key;
+    const slug=slugify(title)+"-"+id.slice(-4); // LINK HAS TOPIC
+
+    let mediaURL = DEFAULT_IMG;
+    const file=fundMedia.files[0];
+    if(file){ mediaURL = await new Promise((resolve)=>{const rd=new FileReader(); rd.onload=e=>resolve(e.target.result); rd.readAsDataURL(file);}); }
+
+    let pd = {};
+    if(method=="Bank"){ pd={bankName:bankName.value,bankHolder:bankHolder.value,bankAccount:bankAccount.value}; }
+    else{ pd={number:formatPhone(payoutNumber.value), names:payoutNames.value}; }
+
+    await set(ref(db,'fundraisers/'+id),{
+      id,userId:currentUser.id,title,slug,target:+target,story,media:mediaURL,payoutMethod:method,payoutDetails:pd,status:"approved",created:Date.now()
+    });
+
+    btn.innerText="✓ Success!";
+    const donorLink = `${BASE_URL}?f=${slug}`;
+    toast("Fundraiser Launched! Redirecting to Donor Page...");
+
+    setTimeout(()=>{location.href = donorLink}, 900); // GO TO PAGE 3
+
+  }catch(err){ toast("Error: " + err.message); btn.disabled=false; btn.innerText=originalText; }
+}
+
+// PAGE 3: DONOR PAGE - PUBLIC
+window.showDonorPage=async function(slug){
+  const snap=await get(child(dbRef,'fundraisers/')); let f=null; if(snap.exists()){snap.forEach(c=>{if(c.val().slug==slug)f=c.val()})}
+  if(!f)return document.getElementById('app').innerHTML="<div class='card'><h2>Fundraiser Not Found</h2></div>";
+
+  const userSnap=await get(child(dbRef,'users/'+f.userId)); const beneficiary = userSnap.exists()?userSnap.val().name:'Beneficiary';
+  let raised=0; let pct=0;
+  const shareLink = `${BASE_URL}?f=${f.slug}`;
+
+  // UPDATE OG TAGS: TOPIC + WEBSITE NAME SHOWS ON WHATSAPP
+  document.getElementById('ogTitle').setAttribute('content', f.title + ' | Yamba Muno');
+  document.getElementById('ogDesc').setAttribute('content', `Help ${beneficiary}: ${f.story.substring(0,150)}...`);
+  document.getElementById('ogImg').setAttribute('content', f.media);
+  document.getElementById('ogUrl').setAttribute('content', shareLink);
+  document.getElementById('ogSite').setAttribute('content', 'Yamba Muno');
+  document.title = `${f.title} | Yamba Muno`;
+
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('donorPage').classList.remove('hidden');
+  document.getElementById('donorPage').innerHTML=`<div class="card"><h2>${f.title}</h2><p class="small-text"><b>Organized by:</b> ${beneficiary}</p>${f.media?`<img src="${f.media}">`:""}<p style="line-height:1.7;font-size:16px">${f.story}</p><h3>Fundraising Goal: ${f.target.toLocaleString()} UGX</h3><div class="progress"><div class="progress-bar" style="width:${pct}%">${pct}% - ${raised.toLocaleString()} UGX raised</div></div>
+  <div class="fee-box">91% goes directly to ${beneficiary}. 9% supports Yamba Muno to keep the platform running.</div>
+
+  <div class="card"><h3>📢 Share to Help</h3><input value="${shareLink}" readonly><div class="share-grid"><button class="btn-whatsapp" onclick="shareWA('${shareLink}','${f.title}')">Share to WhatsApp</button><button class="btn-gold" onclick="copyShare('${shareLink}')">Copy Link</button></div></div>
+
+  <button class="btn-donate">Donate Now</button></div>`;
+}
+
+window.shareWA=function(link,title){window.open(`https://wa.me/?text=${encodeURIComponent(title + '\n\nSupport on Yamba Muno:\n' + link)}`,'_blank');}
+window.copyShare=async function(link){await navigator.clipboard.writeText(link); toast('Link Copied!')}
+</script>
+</body>
+</html>
