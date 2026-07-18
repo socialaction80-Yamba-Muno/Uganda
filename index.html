@@ -1,1 +1,118 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Action Uganda - Fundraising</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+   .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #2c7a2c; }
+   .topic { color: #555; font-size: 14px; text-transform: uppercase; }
+   .link-box { background: #e8f5e9; padding: 12px; border-radius: 6px; margin-top: 15px; word-break: break-all; }
+   .btn { display: inline-block; margin-top: 15px; padding: 12px 20px; background: #2c7a2c; color: white; text-decoration: none; border-radius: 6px; }
+   .generator { margin-top: 40px; padding: 20px; background: #fff; border-radius: 10px; }
+    input, select { padding: 10px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="fundraiser">
+    <p class="topic" id="topicSlug"></p>
+    <h1 id="title">Loading...</h1>
+    <p id="details">Please wait</p>
+    <div class="link-box">
+      <strong>Fundraising Link:</strong><br>
+      <span id="fundLink"></span>
+    </div>
+    <a href="#" class="btn" id="donateBtn">Support This Cause</a>
+  </div>
+
+  <div class="generator">
+    <h2>Generate New Fundraising Link</h2>
+    <select id="topicSelect">
+      <option value="charity-for-babies">Charity for Babies</option>
+      <option value="child-nutrition">Child Nutrition</option>
+      <option value="orphanage-support">Orphanage Support</option>
+      <option value="newborn-medical-care">Newborn Medical Care</option>
+      <option value="baby-supplies">Baby Supplies</option>
+      <option value="family-strengthening">Family Strengthening</option>
+    </select>
+    <input type="number" id="idInput" placeholder="Enter ID e.g. 3451" value="3451">
+    <button onclick="generateLink()">Generate Link</button>
+    <p id="generatedOutput"></p>
+  </div>
+
+<script>
+// Database of fundraising topics + details
+const fundraisingData = {
+  "charity-for-babies": {
+    title: "Charity for Babies in Uganda",
+    details: "SOS Children's Village in Kakiri runs a nursery for 100 little children and supports 480 families through the Family Strengthening Programme. The program provides food, school fees, counseling and medical support to prevent child abandonment. Under-five mortality in Uganda is 128 per 1,000 live births due to limited medical care."
+  },
+  "child-nutrition": {
+    title: "Save 600 Malnourished Children",
+    details: "Child and Family Foundation Uganda is working to identify 600 malnourished children across communities. The project provides healthcare, nutrition support, and food packages to save lives. Many caregivers struggle to afford both food and basic supplies for their children."
+  },
+  "orphanage-support": {
+    title: "Support Orphaned and Abandoned Children",
+    details: "SOS Children's Village Kakiri provides 13 family houses for 130 orphaned and abandoned children. Children receive housing, education, and healthcare until they can support themselves. The community also runs a primary and secondary school for 500 pupils from the village."
+  },
+  "newborn-medical-care": {
+    title: "Medical Equipment for Newborn Babies",
+    details: "Many preventable diseases infect young children and medical care at birth is often not available. This fund helps purchase incubators and medical equipment for clinics in Uganda to reduce newborn mortality and give every baby a fair start."
+  },
+  "baby-supplies": {
+    title: "Diapers and Supplies for Special Needs Babies",
+    details: "Jake's Diapers donates cloth diapers at no cost to orphanages and rescue centers. One cloth diaper replaces 400+ disposable diapers, helping organizations afford food and medical care instead. This provides a long-term solution from birth through potty-training."
+  },
+  "family-strengthening": {
+    title: "Family Strengthening Programme",
+    details: "This programme exists to increase the capability of struggling families to care for their children. We provide school fees, food packages, counseling and skills training to caregivers so they can earn money and support their children long-term, preventing abandonment."
+  }
+};
+
+const BASE_URL = "https://socialaction80-yamba-muno.github.io/Uganda/";
+
+// Read URL parameter and show details
+function loadFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const f = params.get('f'); // e.g. "charity-for-babies--3451"
+
+  if(f) {
+    const [slug, id] = f.split('--');
+    const data = fundraisingData[slug];
+
+    if(data) {
+      document.getElementById('topicSlug').innerText = slug.replace(/-/g, ' ');
+      document.getElementById('title').innerText = data.title;
+      document.getElementById('details').innerText = data.details;
+      document.getElementById('fundLink').innerText = BASE_URL + '?f=' + f;
+      document.getElementById('donateBtn').href = BASE_URL + '?f=' + f;
+    } else {
+      document.getElementById('title').innerText = "Fundraiser Not Found";
+      document.getElementById('details').innerText = "We don't have details for this topic yet.";
+    }
+  }
+}
+
+// Generator function
+function generateLink() {
+  const slug = document.getElementById('topicSelect').value;
+  const id = document.getElementById('idInput').value;
+  const link = `${BASE_URL}?f=${slug}--${id}`;
+
+  const data = fundraisingData[slug];
+  document.getElementById('generatedOutput').innerHTML = `
+    <strong>Topic:</strong> ${data.title}<br>
+    <strong>Details:</strong> ${data.details.substring(0,150)}...<br>
+    <strong>Link:</strong> <a href="${link}" target="_blank">${link}</a>
+  `;
+}
+
+loadFromURL();
+</script>
+
+</body>
+</html>
