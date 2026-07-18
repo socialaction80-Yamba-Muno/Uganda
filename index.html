@@ -1,1 +1,207 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B3D0B">
+<meta id="ogSite" property="og:site_name" content="YAMBAMUNO.COM">
+<meta id="ogTitle" property="og:title" content="Yamba Muno - Transparent Fundraising Uganda">
+<meta id="ogDesc" property="og:description" content="Support someone in need through Yamba Muno">
+<meta id="ogImg" property="og:image" content="https://i.imgur.com/8Km9tLL.png">
+<meta id="ogUrl" property="og:url" content="">
+<meta property="og:type" content="website">
+<title>Yamba Muno</title>
+<style>
+:root{--green:#0B3D0B;--gold:#D4AF37;--light:#F8F9FA}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial}
+body{background:var(--light);color:#222;padding-bottom:80px}
+header{background:var(--green);color:white;padding:14px;text-align:center;position:sticky;top:0;z-index:10}
+header h1{font-size:22px;letter-spacing:1px}.admin-icon{position:absolute;left:12px;top:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gold)}
+.container{max-width:680px;margin:15px auto;padding:12px}
+.card{background:white;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+h2,h3,h4{color:var(--green);margin-bottom:10px}
+input,textarea,select{width:100%;padding:14px;margin:8px 0;border:1px solid #ccc;border-radius:8px;font-size:16px}
+button{background:var(--green);color:white;padding:15px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;width:100%;font-size:16px;margin-top:8px}
+button:active{transform:scale(0.98)} button.gold{background:var(--gold);color:#000} button.donate{background:var(--gold);color:#000;font-size:18px}
+button.whatsapp{background:#25D366} button.danger{background:#B00020} button.warn{background:#FF8F00}
+.hidden{display:none} img{max-width:100%;border-radius:10px;margin:10px 0} #previewImg{max-height:220px;object-fit:cover;width:100%}
+.progress{height:20px;background:#e0e0e0;border-radius:10px;overflow:hidden;margin:12px 0}
+.progress-bar{height:100%;background:var(--green);text-align:center;color:white;font-size:12px;line-height:20px;font-weight:bold}
+.fee-box{background:#E8F5E9;border-left:4px solid var(--green);padding:12px;border-radius:6px;font-size:13px}
+.success-box{background:#E8F5E9;border:2px solid var(--green);padding:15px;border-radius:10px;text-align:center}
+footer{text-align:center;padding:20px;font-size:12px;color:#666}
+</style>
+</head>
+<body>
+<header><button class="admin-icon" onclick="showAdminLogin()">💚</button><div><h1>YAMBA MUNO</h1><p style="font-size:12px">YAMBAMUNO.COM</p></div></header>
+<div class="container"><div id="app"></div><div id="dashboard" class="hidden"></div><div id="admin" class="hidden"></div><div id="donorPage" class="hidden"></div></div>
+
+<footer><a href="https://wa.me/256780420041" target="_blank"><button class="whatsapp">💬 Customer Care</button></a><p style="margin-top:8px">© 2026 YAMBAMUNO.COM | 9% Platform Fee</p></footer>
+
+<script>
+let users={},fundraisers={},donations={},proofs={},messages={};
+let currentUser=JSON.parse(sessionStorage.getItem('ym_current'))||null;
+let creatingNew=false;
+const ADMIN_EMAIL="admin@yambamuno.com"; const ADMIN_PASS="Kalungi123"; const ADMIN_NAME="Lubinga Alosious";
+const PLATFORM_PERCENT=9;
+const STRIPE_LINK="https://buy.stripe.com/8x214o2awd8l8ym7PhfjG00";
+const DEFAULT_IMG = "https://i.imgur.com/8Km9tLL.png";
+const SITE_PREFIX = "yambamuno"; // ADDED: for link branding
+
+init();
+function init(){
+  loadFromLocal();
+  seedDefaultData();
+  showPage();
+}
+
+function seedDefaultData(){
+  if(Object.keys(fundraisers).length === 0){
+    users['ym_team'] = {name: 'Yamba Muno Team', phone: '+256780420041', pass: 'team123', id: 'ym_team'};
+    fundraisers['fund_3451'] = {
+      id: 'fund_3451',
+      userId: 'ym_team',
+      title: 'Charity for Babies',
+      slug: SITE_PREFIX+'-charity-for-babies--3451', // CHANGED: added site name
+      target: 10000000,
+      story: 'We are raising funds to provide milk, diapers, medical care and basic needs for abandoned babies in Kampala. Every donation helps save a life.',
+      media: 'https://i.imgur.com/8Km9tLL.png',
+      payoutMethod: 'Stripe',
+      agreed: true,
+      status: 'approved',
+      created: Date.now()
+    };
+    saveToLocal();
+  }
+}
+
+function loadFromLocal(){users=JSON.parse(localStorage.getItem('ym_users'))||{}; fundraisers=JSON.parse(localStorage.getItem('ym_funds'))||{}; donations=JSON.parse(localStorage.getItem('ym_dons'))||{}; proofs=JSON.parse(localStorage.getItem('ym_proofs'))||{}; messages=JSON.parse(localStorage.getItem('ym_msgs'))||{};}
+function saveToLocal(){localStorage.setItem('ym_users',JSON.stringify(users)); localStorage.setItem('ym_funds',JSON.stringify(fundraisers)); localStorage.setItem('ym_dons',JSON.stringify(donations)); localStorage.setItem('ym_proofs',JSON.stringify(proofs)); localStorage.setItem('ym_msgs',JSON.stringify(messages));}
+function saveSession(user){currentUser=user;sessionStorage.setItem('ym_current',JSON.stringify(user));}
+function formatPhone(n){return"+256"+n.replace(/\D/g,'').slice(-9);}
+function slugify(text){return SITE_PREFIX+'-'+text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').substring(0,40);} // CHANGED
+
+function updateOGTags(title, desc, img, url){
+  document.getElementById('ogTitle').setAttribute('content', title);
+  document.getElementById('ogDesc').setAttribute('content', desc);
+  document.getElementById('ogImg').setAttribute('content', img);
+  document.getElementById('ogUrl').setAttribute('content', url);
+  document.getElementById('ogSite').setAttribute('content', 'YAMBAMUNO.COM');
+  document.title = title + ' | Yamba Muno';
+}
+
+function showPage(){const urlParams=new URLSearchParams(window.location.search); if(urlParams.has('f')){showDonorPage(urlParams.get('f'));} else if(currentUser){currentUser.id==="admin"?showAdmin():showDashboard();} else{showAuthPage();}}
+
+function showAuthPage(){updateOGTags('Yamba Muno - Start Fundraiser', 'Start your transparent fundraiser in Uganda', DEFAULT_IMG, window.location.href); document.getElementById('app').innerHTML=`<div class="card"><h2>Start Your Fundraiser</h2><input id="authName" placeholder="Your Full Names"><div style="display:flex"><div style="padding:14px;background:#eee;border-radius:8px 0 0 8px">+256</div><input id="authPhone" placeholder="788417769" maxlength="9" inputmode="numeric" style="border-radius:0 8px 8px 0"></div><input id="authPass" type="password" placeholder="Create Password"><button onclick="signup()">Create Account</button><button onclick="login()" style="background:#555">Login</button><p style="font-size:12px;margin-top:10px">Demo Admin: admin@yambamuno.com / Kalungi123</p></div>`;}
+window.showAdminLogin=function(){const e=prompt("Admin Email:"),p=prompt("Password:"); if(e==ADMIN_EMAIL&&p==ADMIN_PASS){saveSession({name:"Admin",id:"admin"});showAdmin();}else if(e)alert("Wrong login");}
+window.signup=function(){if(!authName.value||!authPhone.value||!authPass.value)return alert("Fill all"); const id=Date.now().toString();users[id]={name:authName.value,phone:formatPhone(authPhone.value),pass:authPass.value,id};saveToLocal();alert("Account Created"); location.reload();}
+window.login=function(){const phone=formatPhone(authPhone.value); let user=Object.values(users).find(u=>u.phone==phone&&u.pass==authPass.value); if(!user)return alert("Wrong details"); saveSession(user);showDashboard();}
+
+window.showDashboard=function(){
+  updateOGTags('Yamba Muno Dashboard', 'Manage your fundraisers', DEFAULT_IMG, window.location.href);
+  document.getElementById('app').classList.add('hidden');document.getElementById('admin').classList.add('hidden');document.getElementById('donorPage').classList.add('hidden');document.getElementById('dashboard').classList.remove('hidden');
+  let myFunds=Object.values(fundraisers).filter(f=>f.userId==currentUser.id);
+
+  let section="";
+  if(myFunds.length>0 &&!creatingNew){
+    section=myFunds.map(f=>{
+      let myDons=Object.values(donations).filter(d=>d.fundId==f.id);
+      let gross=myDons.reduce((a,b)=>a+b.amount,0); let platformFee=Math.round(gross*PLATFORM_PERCENT/100); let net=gross-platformFee;
+      const link=window.location.origin+window.location.pathname+"?f="+f.slug;
+      return `<div class="success-box"><h3>🎉 ${f.title}</h3><p>Share this link:</p><input value="${link}" readonly style="text-align:center;font-weight:bold"><button onclick="navigator.clipboard.writeText('${link}')">Copy Link</button><button onclick="window.open('${link}')">View Donor Page</button></div>
+      <div class="card"><h2>${f.title}</h2>${f.media?`<img src="${f.media}">`:""}<p>${f.story}</p><h3>Goal: ${f.target.toLocaleString()} UGX</h3></div>
+      <div class="card"><h3>📊 Earnings</h3><p>Total Raised: <b>${gross.toLocaleString()} UGX</b></p><p>Yamba Muno Fee 9%: <b>-${platformFee.toLocaleString()} UGX</b></p><p style="color:var(--green);font-size:18px">You Receive: <b>${net.toLocaleString()} UGX</b></p></div>`;
+    }).join('') + `<button class="gold" onclick="createNewFundraiser()">+ Create New Fundraiser</button>`;
+  }else{
+    section=`<div class="card"><h3>Create Fundraiser</h3><input id="fundTitle" placeholder="What is this for? e.g Charity for Babies"><input id="fundTarget" type="number" placeholder="Target Amount UGX" inputmode="numeric"><textarea id="fundStory" placeholder="Tell your story..." rows="4"></textarea>
+    <label><b>Upload Photo</b> - Optional</label><input id="fundMedia" type="file" accept="image/*" onchange="previewImage(event)"><img id="previewImg" class="hidden">
+    <div class="checkbox-group"><input type="checkbox" id="agreeTerms"><label><b>I authorize Yamba Muno</b> to collect donations on my behalf. I understand the 9% platform fee.</label></div>
+    <button class="gold" onclick="launchFundraiser()">Launch Fundraiser Now</button>${myFunds.length>0?`<button onclick="cancelNew()">Cancel</button>`:""}</div>`;
+  }
+
+  document.getElementById('dashboard').innerHTML=`<div class="card"><h2>Hi ${currentUser.name}</h2><button class="danger" onclick="logout()">Logout</button></div>`+section;
+}
+
+window.createNewFundraiser=function(){creatingNew=true; showDashboard();}
+window.cancelNew=function(){creatingNew=false; showDashboard();}
+
+window.previewImage=function(e){const file=e.target.files[0]; if(file){const rd=new FileReader(); rd.onload=ev=>{previewImg.src=ev.target.result; previewImg.classList.remove('hidden');}; rd.readAsDataURL(file);}}
+
+window.launchFundraiser=function(){
+  try{
+    if(!document.getElementById('agreeTerms').checked) return alert("⚠️ You must agree to terms");
+    if(!fundTitle.value||!fundTarget.value) return alert("⚠️ Fill Title and Target");
+
+    const file=fundMedia.files[0];
+    const createFund = (media)=>{
+      const id=Date.now().toString();
+      const slug=slugify(fundTitle.value)+"-"+id.slice(-4); // CHANGED: includes yambamuno-
+
+      fundraisers[id]={id,userId:currentUser.id,title:fundTitle.value,slug,target:+fundTarget.value,story:fundStory.value,media,payoutMethod:'Stripe',agreed:true,status:"approved",created:Date.now()};
+      saveToLocal();
+
+      const link=window.location.origin+window.location.pathname+"?f="+slug;
+      creatingNew=false;
+      alert("🎉 Fundraiser Launched Successfully!\n\nYour Shareable Link:\n" + link);
+      showDashboard();
+    }
+
+    if(file){const rd=new FileReader(); rd.onload=e=>createFund(e.target.result); rd.onerror=()=>createFund(DEFAULT_IMG); rd.readAsDataURL(file);}
+    else{createFund(DEFAULT_IMG);}
+
+  }catch(err){
+    alert("Launch Error: " + err.message);
+    console.log(err);
+  }
+}
+
+// UPDATED DONOR PAGE: Shows Topic, Story, Picture + Only Stripe Button
+window.showDonorPage=function(slug){
+  loadFromLocal();
+  const f=Object.values(fundraisers).find(x=>x.slug==slug);
+  if(!f){
+    document.getElementById('donorPage').innerHTML="<div class='card'><h2>Fundraiser Not Found</h2></div>";
+    document.getElementById('donorPage').classList.remove('hidden');
+    return;
+  }
+  const beneficiary = users[f.userId]?.name||'Beneficiary';
+  let raised=Object.values(donations).filter(d=>d.fundId==f.id).reduce((a,b)=>a+b.amount,0);
+  let pct=f.target>0?Math.min(100,Math.round(raised/f.target*100)):0;
+  let platformFee=Math.round(raised*PLATFORM_PERCENT/100);
+  let net=raised-platformFee;
+  const link=window.location.origin+window.location.pathname+"?f="+f.slug;
+
+  updateOGTags(f.title,`Support ${beneficiary}: ${f.story.substring(0,120)}...`,f.media || DEFAULT_IMG,link);
+
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('admin').classList.add('hidden');
+  document.getElementById('donorPage').classList.remove('hidden');
+
+  document.getElementById('donorPage').innerHTML=`
+  <div class="card">
+    <h2>${f.title}</h2> <!-- TOPIC -->
+    <p><b>Organized by:</b> ${beneficiary}</p>
+    ${f.media?`<img src="${f.media}">`:""} <!-- PICTURE -->
+    <p>${f.story}</p> <!-- STORY -->
+    <h3>Goal: ${f.target.toLocaleString()} UGX</h3>
+    <div class="progress"><div class="progress-bar" style="width:${pct}%">${pct}% Raised</div></div>
+  </div>
+  <div class="card"><h3>📊 Fundraising Progress</h3>
+    <p>Total Raised: <b>${raised.toLocaleString()} UGX</b></p>
+    <p>Yamba Muno Fee 9%: <b>-${platformFee.toLocaleString()} UGX</b></p>
+    <p style="color:var(--green);font-size:18px">For ${beneficiary}: <b>${net.toLocaleString()} UGX</b></p>
+  </div>
+  <div class="fee-box">91% goes directly to ${beneficiary}. 9% supports Yamba Muno operations.</div>
+  <div class="success-box"><p><b>Share this fundraiser:</b></p><input value="${link}" readonly style="text-align:center;font-weight:bold"><button onclick="navigator.clipboard.writeText('${link}')">Copy Link</button></div>
+
+  <!-- ONLY STRIPE BUTTON -->
+  <button class="donate" onclick="window.open('${STRIPE_LINK}','_blank')">Donate to a cause</button>
+  `;
+}
+
+window.showAdmin=function(){document.getElementById('app').classList.add('hidden');document.getElementById('dashboard').classList.add('hidden');document.getElementById('donorPage').classList.add('hidden');document.getElementById('admin').classList.remove('hidden'); let html=`<h2>🔒 Admin Dashboard</h2><h3>All Active Fundraisers</h3>`; Object.values(fundraisers).filter(f=>f.status=="approved").forEach(f=>{let u=users[f.userId]; html+=`<div class="card"><h4>${f.title}</h4><p><b>By:</b> ${u?.name}</p><p><b>Link:</b>?f=${f.slug}</p></div>`}); document.getElementById('admin').innerHTML=html+`<button onclick="logout()">Logout</button>`;}
+window.logout=function(){currentUser=null;sessionStorage.clear();location.reload();}
+</script>
+</body></html>
