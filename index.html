@@ -1,1 +1,1381 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0A4D2B"/>
+
+<!-- DYNAMIC OG TAGS FOR SHARING -->
+<meta property="og:type" content="website"/>
+<meta id="ogUrl" property="og:url" content=""/>
+<meta id="ogTitle" property="og:title" content="Yamba Muno – Transparent Fundraising"/>
+<meta id="ogDesc" property="og:description" content="Support someone in need through Yamba Muno"/>
+<meta id="ogImg" property="og:image" content="https://i.imgur.com/8Km9tLL.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Yamba Muno"/>
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta id="twTitle" name="twitter:title" content="Yamba Muno – Transparent Fundraising"/>
+<meta id="twDesc" name="twitter:description" content="Support someone in need through Yamba Muno."/>
+<meta id="twImg" name="twitter:image" content="https://i.imgur.com/8Km9tLL.png"/>
+
+<title>Yamba Muno</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { inter: ['Inter', 'sans-serif'] },
+        colors: {
+          green: { DEFAULT: '#0A4D2B', light: '#0E6B3C', pale: '#ECFDF5', subtle: '#D1FAE5' },
+          gold: { DEFAULT: '#F4B400', hover: '#D99E00', pale: '#FEF3C7' },
+          mtn: { DEFAULT: '#FFCC00' },
+          airtel:{ DEFAULT: '#E4002B' },
+          stripe:{ DEFAULT: '#635BFF' }
+        }
+      }
+    }
+  }
+</script>
+<style>
+* { font-family: 'Inter', sans-serif; }
+  body { background: #F0F4F2; }
+.progress-bar-inner { transition: width 0.8s ease; }
+.card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(10,77,43,0.12); }
+.fade-in { animation: fadeIn 0.35s ease forwards; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.btn-press:active { transform: scale(0.97); }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background:#f0f4f2; } ::-webkit-scrollbar-thumb { background:#0A4D2B55; border-radius:4px; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #0A4D2B; box-shadow: 0 0 0 3px rgba(10,77,43,0.12); }
+.copied-flash { animation: flash 0.5s ease; }
+  @keyframes flash { 0%,100%{background:#0A4D2B} 50%{background:#0E6B3C} }
+.proof-textarea { font-family: monospace; font-size: 13px; }
+.shimmer { background: linear-gradient(90deg, #e8f0ea 25%, #d1e8d8 50%, #e8f0ea 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.method-chevron { transition: transform 0.3s ease; }
+.method-chevron.open { transform: rotate(180deg); }
+</style>
+</head>
+<body class="text-gray-800 pb-24">
+
+<!-- ===== HEADER ===== -->
+<header class="bg-gradient-to-r from-green to-green-light text-white sticky top-0 z-50 shadow-lg">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <button onclick="showAdminLogin()" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors" title="Admin">
+      <i class="fa-solid fa-gear text-gold"></i>
+    </button>
+    <div class="text-center cursor-pointer" onclick="showHome()">
+      <h1 class="text-xl font-black tracking-widest leading-none">YAMBA MUNO</h1>
+      <p class="text-white/70 text-xs mt-0.5">Transparent Fundraising UG · KE · TZ · NG</p>
+    </div>
+    <button id="headerAuthBtn" onclick="showAuthPage()" class="w-10 h-10 rounded-xl bg-gold/90 hover:bg-gold flex items-center justify-center transition-colors">
+      <i class="fa-solid fa-user text-black text-sm"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ===== APP CONTAINER ===== -->
+<main class="max-w-4xl mx-auto px-4">
+  <div id="home"></div>
+  <div id="app" class="hidden"></div>
+  <div id="dashboard" class="hidden"></div>
+  <div id="admin" class="hidden"></div>
+  <div id="donorPage" class="hidden"></div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="mt-16 pb-8 text-center px-4">
+  <a href="https://wa.me/256780420041" target="_blank" class="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold px-6 py-3 rounded-xl btn-press transition-opacity hover:opacity-90">
+    <i class="fab fa-whatsapp text-lg"></i> WhatsApp Support
+  </a>
+  <p class="text-gray-400 text-xs mt-4">© 2026 YAMBAMUNO.COM | 9% Platform Fee | All transactions verified by admin</p>
+</footer>
+
+<script>
+/* ===================================================
+   DATA LAYER
+=================================================== */
+let users = {}, fundraisers = {}, donations = {}, proofs = {}, stripeNotes = {};
+let currentUser = JSON.parse(localStorage.getItem('ym_current')) || null;
+let creatingNew = false;
+
+const ADMIN_EMAIL = "admin@yambamuno.com";
+const ADMIN_PASS = "Kalungi123";
+const ADMIN_NAME = "Lubinga Alosious";
+const PLATFORM_PCT = 9;
+const MTN_NUMBER = "+256788417769";
+const AIRTEL_NUMBER = "+256743830346";
+const STRIPE_LINK = "https://buy.stripe.com/8x214o2awd8l8ym7PhfjG00";
+const DEFAULT_IMG = "https://i.imgur.com/8Km9tLL.png";
+let uploadedImgUrl = DEFAULT_IMG;
+let tempPayout = null;
+let isUploading = false;
+
+// FIX 1: Only 4 countries for signup/login/payout
+const SERVICE_CODES = [
+  {code:'+256', name:'Uganda'},
+  {code:'+254', name:'Kenya'},
+  {code:'+255', name:'Tanzania'},
+  {code:'+234', name:'Nigeria'}
+];
+
+// FIX 2: All African countries for donation
+const AFRICAN_CODES = [
+  {code:'+256', name:'Uganda'}, {code:'+254', name:'Kenya'}, {code:'+255', name:'Tanzania'}, {code:'+234', name:'Nigeria'},
+  {code:'+233', name:'Ghana'}, {code:'+27', name:'South Africa'}, {code:'+263', name:'Zimbabwe'}, {code:'+260', name:'Zambia'},
+  {code:'+250', name:'Rwanda'}, {code:'+251', name:'Ethiopia'}, {code:'+20', name:'Egypt'}, {code:'+212', name:'Morocco'},
+  {code:'+216', name:'Tunisia'}, {code:'+213', name:'Algeria'}, {code:'+237', name:'Cameroon'}, {code:'+243', name:'DRC'},
+  {code:'+229', name:'Benin'}, {code:'+226', name:'Burkina Faso'}, {code:'+257', name:'Burundi'}, {code:'+235', name:'Chad'},
+  {code:'+269', name:'Comoros'}, {code:'+242', name:'Congo'}, {code:'+253', name:'Djibouti'}, {code:'+240', name:'Equatorial Guinea'},
+  {code:'+291', name:'Eritrea'}, {code:'+268', name:'Eswatini'}, {code:'+241', name:'Gabon'}, {code:'+220', name:'Gambia'},
+  {code:'+224', name:'Guinea'}, {code:'+245', name:'Guinea-Bissau'}, {code:'+225', name:'Ivory Coast'}, {code:'+266', name:'Lesotho'},
+  {code:'+231', name:'Liberia'}, {code:'+218', name:'Libya'}, {code:'+261', name:'Madagascar'}, {code:'+265', name:'Malawi'},
+  {code:'+223', name:'Mali'}, {code:'+222', name:'Mauritania'}, {code:'+230', name:'Mauritius'}, {code:'+258', name:'Mozambique'},
+  {code:'+264', name:'Namibia'}, {code:'+227', name:'Niger'}, {code:'+221', name:'Senegal'}, {code:'+248', name:'Seychelles'},
+  {code:'+232', name:'Sierra Leone'}, {code:'+252', name:'Somalia'}, {code:'+211', name:'South Sudan'}, {code:'+249', name:'Sudan'},
+  {code:'+228', name:'Togo'}
+];
+
+function loadData() {
+  users = JSON.parse(localStorage.getItem('ym_users')) || {};
+  fundraisers = JSON.parse(localStorage.getItem('ym_funds')) || {};
+  donations = JSON.parse(localStorage.getItem('ym_dons')) || {};
+  proofs = JSON.parse(localStorage.getItem('ym_proofs')) || {};
+  stripeNotes = JSON.parse(localStorage.getItem('ym_stripe_notes')) || {};
+}
+function saveData() {
+  localStorage.setItem('ym_users', JSON.stringify(users));
+  localStorage.setItem('ym_funds', JSON.stringify(fundraisers));
+  localStorage.setItem('ym_dons', JSON.stringify(donations));
+  localStorage.setItem('ym_proofs', JSON.stringify(proofs));
+  localStorage.setItem('ym_stripe_notes', JSON.stringify(stripeNotes));
+}
+function saveSession(user) {
+  currentUser = user;
+  localStorage.setItem('ym_current', JSON.stringify(user));
+}
+function slugify(text) {
+  return text.toString().toLowerCase().replace(/\s+/g,'-').replace(/[^\w\-]+/g,'').substring(0,40);
+}
+function currency(country) {
+  return { KE:'KES', TZ:'TZS', UG:'UGX', NG:'NGN' }[country] || 'UGX';
+}
+function updateMeta(title, desc, img, url) {
+  ['ogTitle','twTitle'].forEach(id => document.getElementById(id).setAttribute('content', title));
+  ['ogDesc','twDesc'].forEach(id => document.getElementById(id).setAttribute('content', desc));
+  ['ogImg','twImg'].forEach(id => document.getElementById(id).setAttribute('content', img));
+  document.getElementById('ogUrl').setAttribute('content', url);
+  document.title = title + ' | Yamba Muno';
+}
+function hideAll() {
+  ['home','app','dashboard','admin','donorPage'].forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+function fmtNum(n) { return Number(n||0).toLocaleString(); }
+function ago(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'just now';
+  if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+  return Math.floor(d/86400000) + 'd ago';
+}
+function cleanPhone9(input) {
+  return input.replace(/\D/g,'').slice(-9);
+}
+/* ===================================================
+   INIT
+=================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  updateHeaderBtn();
+  const slug = new URLSearchParams(window.location.search).get('f');
+  if (slug) showDonorPage(slug);
+  else if (currentUser?.id === 'admin') showAdmin();
+  else if (currentUser) showDashboard();
+  else showHome();
+});
+
+function updateHeaderBtn() {
+  const btn = document.getElementById('headerAuthBtn');
+  if (!btn) return;
+  if (currentUser) {
+    btn.innerHTML = '<i class="fa-solid fa-grid-2 text-black text-sm"></i>';
+    btn.onclick = () => currentUser.id === 'admin' ? showAdmin() : showDashboard();
+    btn.title = 'My Dashboard';
+  } else {
+    btn.innerHTML = '<i class="fa-solid fa-user text-black text-sm"></i>';
+    btn.onclick = showAuthPage;
+    btn.title = 'Login / Sign Up';
+  }
+}
+
+/* ===================================================
+   HOME
+=================================================== */
+window.showHome = function() {
+  loadData();
+  updateMeta('Yamba Muno – Transparent Fundraising East Africa', 'Support fundraisers in Uganda, Kenya, Tanzania & Nigeria. 100% transparent. 9% platform fee.', DEFAULT_IMG, window.location.origin + window.location.pathname);
+  hideAll();
+  document.getElementById('home').classList.remove('hidden');
+  updateHeaderBtn();
+
+  const allFunds = Object.values(fundraisers).filter(f => f.status === 'approved').sort((a,b) => b.created - a.created);
+
+  const heroHTML = `
+    <div class="relative rounded-3xl overflow-hidden mt-6 mb-8 shadow-2xl fade-in">
+      <img src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?w=1200&q=80" alt="East Africa community fundraising" class="w-full h-56 md:h-72 object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-green/90 via-green/40 to-transparent flex-col justify-end p-6">
+        <p class="text-gold font-bold text-sm tracking-widest uppercase mb-1">East + West Africa's Most Trusted Platform</p>
+        <h2 class="text-white text-2xl md:text-4xl font-black leading-tight">Give Hope.<br>Change Lives.</h2>
+        <p class="text-white/80 text-sm mt-2 max-w-xs">Every donation is verified. Every shilling tracked. Uganda · Kenya · Tanzania · Nigeria.</p>
+        ${currentUser
+          ? `<button onclick="showDashboard()" class="mt-4 inline-flex items-center gap-2 bg-gold text-black font-bold px-6 py-3 rounded-xl btn-press w-fit"><i class="fa-solid fa-rocket"></i> My Dashboard</button>`
+          : `<button onclick="showAuthPage()" class="mt-4 inline-flex items-center gap-2 bg-gold text-black font-bold px-6 py-3 rounded-xl btn-press w-fit"><i class="fa-solid fa-rocket"></i> Start a Fundraiser</button>`
+        }
+      </div>
+    </div>`;
+
+  const statsHTML = `
+    <div class="grid grid-cols-3 gap-3 mb-8">
+      ${[
+        { icon:'fa-hand-holding-heart', label:'Fundraisers', val: Object.values(fundraisers).filter(f=>f.status==='approved').length },
+        { icon:'fa-coins', label:'Total Raised', val: fmtNum(Object.values(fundraisers).reduce((s,f)=>s+(f.raised||0),0)) },
+        { icon:'fa-users', label:'Donors', val: Object.values(proofs).filter(p=>p.status==='approved').length + Object.values(stripeNotes).filter(s=>s.status==='approved').length }
+      ].map(s => `
+        <div class="bg-white rounded-2xl p-3 text-center shadow-sm border border-gray-100">
+          <i class="fa-solid ${s.icon} text-green text-lg mb-1"></i>
+          <p class="text-green font-black text-base leading-none">${s.val}</p>
+          <p class="text-gray-400 text-xs mt-0.5">${s.label}</p>
+        </div>`).join('')}
+    </div>`;
+
+  const fundsHTML = allFunds.length > 0
+    ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        ${allFunds.map(f => {
+          const pct = f.target > 0 ? Math.min(100, Math.round((f.raised||0) / f.target * 100)) : 0;
+          const link = window.location.origin + window.location.pathname + '?f=' + f.slug;
+          const beneficiary = users[f.userId]?.name || 'Beneficiary';
+          return `
+          <div class="bg-white rounded-2xl overflow-hidden shadow-sm border-gray-100 card-hover cursor-pointer" onclick="window.location.href='${link}'">
+            <div class="relative">
+              <img src="${f.media||DEFAULT_IMG}" alt="${f.title}" class="w-full h-44 object-cover" loading="lazy">
+              <span class="absolute top-3 left-3 bg-green text-white text-xs font-bold px-3 py-1 rounded-full">${f.country}</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-bold text-gray-900 text-base leading-snug mb-1">${f.title}</h3>
+              <p class="text-gray-400 text-xs mb-3">by ${beneficiary}</p>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-green font-bold">${fmtNum(f.raised||0)} ${f.currency}</span>
+                <span class="text-gray-400">${pct}%</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2 mb-3">
+                <div class="bg-gradient-to-r from-green to-green-light h-2 rounded-full progress-bar-inner" style="width:${pct}%"></div>
+              </div>
+              <p class="text-gray-400 text-xs mb-3">Goal: ${fmtNum(f.target)} ${f.currency}</p>
+              <button class="w-full bg-gradient-to-r from-gold to-gold-hover text-black font-bold py-2.5 rounded-xl btn-press text-sm">
+                <i class="fa-solid fa-heart mr-1"></i> Donate Now
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : `<div class="bg-white rounded-2xl p-8 text-center shadow-sm border-gray-100">
+        <i class="fa-solid fa-seedling text-green text-4xl mb-4"></i>
+        <h3 class="font-bold text-gray-700 text-lg">No Active Fundraisers Yet</h3>
+        <p class="text-gray-400 text-sm mt-1">Be the first to start one.</p>
+        <button onclick="showAuthPage()" class="mt-4 bg-green text-white font-bold px-6 py-3 rounded-xl btn-press">Start Fundraiser</button>
+      </div>`;
+
+  document.getElementById('home').innerHTML = `
+    <div class="fade-in">
+      ${heroHTML}
+      ${statsHTML}
+      <h2 class="text-green font-black text-xl mb-4"><i class="fa-solid fa-fire-flame-curved text-gold mr-2"></i>Active Fundraisers</h2>
+      ${fundsHTML}
+    </div>`;
+};
+
+/* ===================================================
+   AUTH PAGE - ONLY 4 COUNTRY CODES FOR SIGNUP
+=================================================== */
+window.showAuthPage = function() {
+  hideAll();
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('app').innerHTML = `
+  <div class="fade-in pt-6">
+    <div id="authTabs" class="flex bg-white rounded-2xl p-1 shadow-sm border-gray-100 mb-6">
+      <button id="tab_signup" onclick="switchTab('signup')" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-green text-white">Create Account</button>
+      <button id="tab_login" onclick="switchTab('login')" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-gray-500">Login</button>
+    </div>
+    <div id="signupForm" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-user-plus text-green text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-black text-gray-900">Start Fundraising</h2>
+        <p class="text-gray-400 text-sm">Available in UG, KE, TZ, NG only</p>
+      </div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Full Names</label>
+      <input id="authName" placeholder="e.g. John Kamau" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+      <select id="authCountry" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+        <option value="UG">🇺🇬 Uganda</option>
+        <option value="KE">🇰🇪 Kenya</option>
+        <option value="TZ">🇹🇿 Tanzania</option>
+        <option value="NG">🇳🇬 Nigeria</option>
+      </select>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number - 9 digits</label>
+      <div class="flex gap-2 mb-3">
+        <select id="authCode" class="bg-gray-100 border-gray-200 rounded-xl px-3 py-3 text-sm font-semibold">
+          ${SERVICE_CODES.map(c=>`<option value="${c.code}">${c.code} ${c.name}</option>`).join('')} <!-- ONLY 4 -->
+        </select>
+        <input id="authPhone" placeholder="700123456" inputmode="numeric" maxlength="9" class="flex-1 border-gray-200 rounded-xl px-4 py-3 text-sm">
+      </div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Create Password</label>
+      <div class="relative mb-4">
+        <input id="authPass" type="password" placeholder="Min. 6 characters" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm pr-10">
+        <button onclick="togglePass('authPass')" class="absolute right-3 top-3 text-gray-400"><i class="fa-solid fa-eye text-sm"></i></button>
+      </div>
+      <button onclick="signup()" class="w-full bg-green hover:bg-green-light text-white font-bold py-4 rounded-xl btn-press text-sm">
+        <i class="fa-solid fa-rocket mr-2"></i>Create Account & Continue
+      </button>
+    </div>
+    <div id="loginForm" class="hidden bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-lock text-green text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-black text-gray-900">Welcome Back</h2>
+        <p class="text-gray-400 text-sm">Login to manage your fundraiser</p>
+      </div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number - 9 digits</label>
+      <div class="flex gap-2 mb-3">
+        <select id="loginCode" class="bg-gray-100 border-gray-200 rounded-xl px-3 py-3 text-sm font-semibold">
+          ${SERVICE_CODES.map(c=>`<option value="${c.code}">${c.code} ${c.name}</option>`).join('')} <!-- ONLY 4 -->
+        </select>
+        <input id="loginPhone" placeholder="700123456" inputmode="numeric" maxlength="9" class="flex-1 border-gray-200 rounded-xl px-4 py-3 text-sm">
+      </div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+      <div class="relative mb-4">
+        <input id="loginPass" type="password" placeholder="Your password" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm pr-10">
+        <button onclick="togglePass('loginPass')" class="absolute right-3 top-3 text-gray-400"><i class="fa-solid fa-eye text-sm"></i></button>
+      </div>
+      <button onclick="login()" class="w-full bg-green hover:bg-green-light text-white font-bold py-4 rounded-xl btn-press text-sm">
+        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Login
+      </button>
+    </div>
+    <button onclick="showHome()" class="w-full mt-3 py-3 text-gray-400 text-sm">← Back to Home</button>
+  </div>`;
+};
+
+function switchTab(tab) {
+  if (tab === 'signup') {
+    document.getElementById('signupForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('tab_signup').className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-green text-white';
+    document.getElementById('tab_login').className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-gray-500';
+  } else {
+    document.getElementById('signupForm').classList.add('hidden');
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('tab_signup').className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-gray-500';
+    document.getElementById('tab_login').className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-green text-white';
+  }
+}
+function togglePass(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+window.signup = function() {
+  const name = document.getElementById('authName').value.trim();
+  const country = document.getElementById('authCountry').value;
+  const code = document.getElementById('authCode').value; // FROM SERVICE_CODES
+  const phone9 = cleanPhone9(document.getElementById('authPhone').value);
+  const pass = document.getElementById('authPass').value;
+  if (!name || !phone9 || !pass) return showToast('Please fill in all fields', 'error');
+  if (phone9.length !== 9) return showToast('Phone must be exactly 9 digits', 'error');
+  if (pass.length < 6) return showToast('Password must be at least 6 characters', 'error');
+  
+  const fullPhone = `${code}${phone9}`;
+  const existing = Object.values(users).find(u => u.phone === fullPhone);
+  if (existing) return showToast('Account with this phone already exists. Please login.', 'error');
+  
+  const id = Date.now().toString();
+  users[id] = { id, name, phone: fullPhone, country, pass };
+  saveData();
+  saveSession(users[id]);
+  updateHeaderBtn();
+  showToast('Account created! Welcome ' + name);
+  showDashboard();
+};
+
+window.login = function() {
+  const code = document.getElementById('loginCode').value; // FROM SERVICE_CODES
+  const phone9 = cleanPhone9(document.getElementById('loginPhone').value);
+  const pass = document.getElementById('loginPass').value;
+  if (phone9.length !== 9) return showToast('Enter 9 digit phone', 'error');
+  
+  const fullPhone = `${code}${phone9}`;
+  const user = Object.values(users).find(u => u.phone === fullPhone && u.pass === pass);
+  if (!user) return showToast('Wrong phone or password', 'error');
+  saveSession(user);
+  updateHeaderBtn();
+  showToast('Welcome back, ' + user.name);
+  showDashboard();
+};
+
+window.showAdminLogin = function() {
+  const e = prompt('Admin Email:');
+  if (!e) return;
+  const p = prompt('Password:');
+  if (e === ADMIN_EMAIL && p === ADMIN_PASS) {
+    saveSession({ name: ADMIN_NAME, id: 'admin' });
+    updateHeaderBtn();
+    showAdmin();
+  } else {
+    showToast('Incorrect admin credentials', 'error');
+  }
+};
+
+window.logout = function() {
+  currentUser = null;
+  localStorage.removeItem('ym_current');
+  updateHeaderBtn();
+  showHome();
+};
+
+/* ===================================================
+   DASHBOARD - ADDED DELETE BUTTON
+=================================================== */
+window.showDashboard = function() {
+  if (!currentUser || currentUser.id === 'admin') { showHome(); return; }
+  loadData();
+  hideAll();
+  document.getElementById('dashboard').classList.remove('hidden');
+
+  const myFunds = Object.values(fundraisers).filter(f => f.userId === currentUser.id);
+  let contentHTML = '';
+
+  if (myFunds.length > 0 && !creatingNew) {
+    contentHTML = myFunds.map(f => {
+      const raised = f.raised || 0;
+      const fee = Math.round(raised * PLATFORM_PCT / 100);
+      const net = raised - fee;
+      const pct = f.target > 0 ? Math.min(100, Math.round(raised / f.target * 100)) : 0;
+      const link = window.location.origin + window.location.pathname + '?f=' + f.slug;
+      const pending = Object.values(proofs).filter(p => p.fundId === f.id && p.status === 'pending').length
+                    + Object.values(stripeNotes).filter(s => s.fundId === f.id && s.status === 'pending').length;
+
+      const statusBadge = f.status === 'approved'
+        ? `<span class="bg-green-pale text-green text-xs font-bold px-3 py-1 rounded-full">✓ Live</span>`
+        : `<span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full">⏳ Pending Review</span>`;
+
+      return `
+      <div class="bg-white rounded-2xl overflow-hidden shadow-sm border-gray-100 mb-5">
+        <img src="${f.media||DEFAULT_IMG}" alt="${f.title}" class="w-full h-48 object-cover" loading="lazy">
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="font-black text-gray-900 text-lg leading-tight">${f.title}</h3>
+              <p class="text-gray-400 text-xs mt-0.5">${f.country} · ${f.currency}</p>
+            </div>
+            <div class="flex flex-col gap-2 items-end">
+              ${statusBadge}
+              <button onclick="deleteFundraiser('${f.id}')" class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full hover:bg-red-200">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button> <!-- FIX: DELETE BUTTON -->
+            </div>
+          </div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-green font-bold">${fmtNum(raised)} ${f.currency} raised</span>
+            <span class="text-gray-400">${pct}%</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-2.5 mb-4">
+            <div class="bg-gradient-to-r from-green to-green-light h-2.5 rounded-full" style="width:${pct}%"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            ${[
+              { label:'Total Raised', val:`${fmtNum(raised)} ${f.currency}`, icon:'fa-coins', color:'text-green' },
+              { label:'Platform Fee 9%', val:`-${fmtNum(fee)} ${f.currency}`, icon:'fa-percent', color:'text-red-500' },
+              { label:'You Receive', val:`${fmtNum(net)} ${f.currency}`, icon:'fa-wallet', color:'text-green font-black' }
+            ].map(s=>`
+              <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <i class="fa-solid ${s.icon} ${s.color} text-sm mb-1"></i>
+                <p class="${s.color} text-xs font-bold leading-tight">${s.val}</p>
+                <p class="text-gray-400 text-xs">${s.label}</p>
+              </div>`).join('')}
+          </div>
+          ${pending > 0 ? `<div class="bg-yellow-50 border-yellow-200 rounded-xl p-3 mb-4 text-xs text-yellow-700"><i class="fa-solid fa-clock mr-1"></i> <b>${pending}</b> donation(s) pending admin verification</div>` : ''}
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 bg-gray-50 border-gray-200 rounded-xl px-3 py-2">
+              <input value="${link}" readonly class="flex-1 bg-transparent text-xs text-gray-600 outline-none">
+              <button onclick="copyLink('${link}', this)" class="shrink-0 bg-green text-white text-xs font-bold px-3 py-1.5 rounded-lg btn-press">Copy</button>
+            </div>
+            <button onclick="shareNative('${link}', '${f.title}', '${users[f.userId]?.name}')" class="w-full border-2 border-gold text-gold font-bold py-2.5 rounded-xl btn-press text-sm hover:bg-gold-pale transition-colors">
+              <i class="fa-solid fa-share-nodes mr-1"></i> Share Fundraiser
+            </button>
+            <button onclick="window.open('${link}')" class="w-full border-2 border-green text-green font-bold py-2.5 rounded-xl btn-press text-sm hover:bg-green-pale transition-colors">
+              <i class="fa-solid fa-eye mr-1"></i> View Donor Page
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `
+    <button onclick="createNewFundraiser()" class="w-full bg-gradient-to-r from-gold to-gold-hover text-black font-black py-4 rounded-2xl btn-press text-sm mb-3">
+      <i class="fa-solid fa-plus mr-2"></i>Create Another Fundraiser
+    </button>`;
+  } else {
+    contentHTML = buildCreateForm();
+  }
+
+  document.getElementById('dashboard').innerHTML = `
+  <div class="fade-in pt-4">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border-gray-100 mb-5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-green rounded-full flex items-center justify-center">
+          <span class="text-white font-black text-base">${currentUser.name[0]}</span>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900">${currentUser.name}</p>
+          <p class="text-gray-400 text-xs">${currentUser.phone} · ${currentUser.country}</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="text-red-400 text-xs font-semibold hover:text-red-600 transition-colors">
+        <i class="fa-solid fa-right-from-bracket mr-1"></i>Logout
+      </button>
+    </div>
+    ${contentHTML}
+  </div>`;
+};
+function buildCreateForm() {
+  uploadedImgUrl = DEFAULT_IMG;
+  tempPayout = null;
+  return `
+  <div class="bg-white rounded-2xl p-5 shadow-sm border-gray-100">
+    <div class="text-center mb-6">
+      <div class="w-14 h-14 bg-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-rocket text-green text-2xl"></i>
+      </div>
+      <h2 class="text-xl font-black text-gray-900">Create Fundraiser</h2>
+      <p class="text-gray-400 text-sm">Available in UG, KE, TZ, NG only. Donors can be worldwide.</p>
+    </div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Fundraiser Title *</label>
+    <input id="fundTitle" placeholder="e.g. Help John's Medical Bill" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-4">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Country *</label>
+    <select id="fundCountry" onchange="updateTargetLabel()" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-4">
+      <option value="UG">🇺🇬 Uganda</option>
+      <option value="KE">🇰🇪 Kenya</option>
+      <option value="TZ">🇹🇿 Tanzania</option>
+      <option value="NG">🇳🇬 Nigeria</option>
+    </select>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Amount Needed *</label>
+    <input id="fundTarget" type="number" placeholder="e.g. 5000000" inputmode="numeric" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-4">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Your Story *</label>
+    <textarea id="fundStory" placeholder="Tell people about your situation – the more honest and detailed, the better..." rows="5" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 resize-none"></textarea>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Cover Photo</label>
+    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center mb-4 cursor-pointer hover:border-green" onclick="document.getElementById('fundMedia').click()">
+      <i class="fa-solid fa-cloud-arrow-up text-gray-300 text-3xl mb-2"></i>
+      <p class="text-gray-400 text-sm">Tap to upload photo</p>
+      <input id="fundMedia" type="file" accept="image/*" class="hidden" onchange="previewImage(event)">
+    </div>
+    <img id="previewImg" src="" alt="Preview" class="hidden w-full h-52 object-cover rounded-xl mb-4">
+    <p id="uploadStatus" class="text-xs text-gray-400 mb-4"></p>
+    
+    <div class="bg-gold-pale border-gold/30 rounded-xl p-4 mb-4">
+      <h4 class="font-bold text-gray-800 text-sm mb-3"><i class="fa-solid fa-university text-gold mr-2"></i>Payout Details - UG, KE, TZ, NG only</h4>
+      <select id="payoutType" onchange="showPayout()" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 bg-white">
+        <option value="">Select Payout Method</option>
+        <option value="Mobile">📱 Mobile Money</option>
+        <option value="Bank">🏦 Bank Account</option>
+      </select>
+      <div id="payoutFields"></div>
+      <button onclick="submitPayoutToAdmin()" class="w-full bg-gold hover:bg-gold-hover text-black font-bold py-3 rounded-xl btn-press text-sm">
+        <i class="fa-solid fa-paper-plane mr-2"></i>Submit Payout Info to Admin
+      </button>
+      <div id="payoutStatus" class="hidden mt-3 bg-green-pale border-green/30 rounded-xl p-3 text-sm text-green font-semibold text-center">
+        <i class="fa-solid fa-circle-check mr-1"></i>Payout info submitted ✓
+      </div>
+    </div>
+    <label class="flex items-start gap-3 mb-5 cursor-pointer">
+      <input type="checkbox" id="agreeTerms" class="mt-1 w-4 h-4 rounded accent-green">
+      <span class="text-sm text-gray-600">I authorize <b>Yamba Muno</b> to collect donations on my behalf. I understand a 9% platform fee applies.</span>
+    </label>
+    <button id="launchBtn" onclick="launchFundraiser()" class="w-full bg-gradient-to-r from-green to-green-light text-white font-black py-4 rounded-2xl btn-press text-base shadow-lg">
+      <i class="fa-solid fa-rocket mr-2"></i>Launch My Fundraiser
+    </button>
+    ${Object.values(fundraisers).filter(f=>f.userId===currentUser?.id).length > 0
+     ? `<button onclick="creatingNew=false;showDashboard()" class="w-full mt-3 py-3 text-gray-400 text-sm">Cancel</button>` : ''}
+  </div>`;
+}
+
+window.updateTargetLabel = function() {
+  const c = document.getElementById('fundCountry')?.value;
+  const cur = currency(c);
+  const el = document.getElementById('fundTarget');
+  if (el) el.placeholder = 'e.g. 5000000';
+};
+
+window.previewImage = async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const rd = new FileReader();
+  rd.onload = ev => {
+    const img = document.getElementById('previewImg');
+    img.src = ev.target.result;
+    img.classList.remove('hidden');
+  };
+  rd.readAsDataURL(file);
+  const status = document.getElementById('uploadStatus');
+  const btn = document.getElementById('launchBtn');
+  status.textContent = '⏳ Processing image...';
+  btn.disabled = true; btn.classList.add('opacity-60');
+  isUploading = true;
+  uploadedImgUrl = await compressToBase64(file);
+  isUploading = false;
+  status.textContent = uploadedImgUrl!== DEFAULT_IMG? '✅ Photo ready ✓' : '⚠️ Could not load image – default will be used';
+  btn.disabled = false; btn.classList.remove('opacity-60');
+};
+
+function compressToBase64(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.78));
+      };
+      img.onerror = () => resolve(DEFAULT_IMG);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(DEFAULT_IMG);
+    reader.readAsDataURL(file);
+  });
+}
+
+window.showPayout = function() {
+  const type = document.getElementById('payoutType').value;
+  const el = document.getElementById('payoutFields');
+  if (type === 'Mobile') {
+    el.innerHTML = `
+      <select id="mmProvider" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 bg-white">
+        <option value="MTN">MTN Mobile Money</option>
+        <option value="Airtel">Airtel Money</option>
+        <option value="M-Pesa">M-Pesa</option>
+        <option value="Tigo">Tigo Pesa</option>
+      </select>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Country Code</label>
+      <select id="payoutCode" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 bg-white">
+        ${SERVICE_CODES.map(c=>`<option value="${c.code}">${c.code} ${c.name}</option>`).join('')} <!-- ONLY 4 -->
+      </select>
+      <input id="payoutNumber" placeholder="Enter 9 digits only" inputmode="numeric" maxlength="9" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+      <input id="payoutNames" placeholder="Registered Name on Account" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">`;
+  } else if (type === 'Bank') {
+    el.innerHTML = `
+      <input id="bankName" placeholder="Bank Name" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+      <input id="bankAccount" placeholder="Account Number" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+      <input id="bankHolder" placeholder="Account Holder Name" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">
+      <input id="bankSwift" placeholder="SWIFT Code (if intl)" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-3">`;
+  } else { el.innerHTML = ''; }
+};
+
+window.submitPayoutToAdmin = function() {
+  const type = document.getElementById('payoutType').value;
+  if (!type) return showToast('Select a payout method first', 'error');
+  let pd = {};
+  if (type === 'Bank') {
+    const bn = document.getElementById('bankName')?.value;
+    const ba = document.getElementById('bankAccount')?.value;
+    const bh = document.getElementById('bankHolder')?.value;
+    if (!bn||!ba||!bh) return showToast('Fill all bank fields', 'error');
+    pd = { type:'Bank', bankName:bn, bankAccount:ba, bankHolder:bh, bankSwift:document.getElementById('bankSwift')?.value||'' };
+  } else {
+    const prov = document.getElementById('mmProvider')?.value;
+    const code = document.getElementById('payoutCode')?.value; // SERVICE_CODES
+    const num9 = cleanPhone9(document.getElementById('payoutNumber')?.value);
+    const nm = document.getElementById('payoutNames')?.value;
+    if (!prov||!num9||!nm) return showToast('Fill all mobile money fields. 9 digits required', 'error');
+    if (num9.length!== 9) return showToast('Payout number must be 9 digits', 'error');
+    pd = { type:'Mobile', provider:prov, number: code + num9, names:nm };
+  }
+  tempPayout = pd;
+  document.getElementById('payoutStatus').classList.remove('hidden');
+  showToast('Payout info saved for admin ✓');
+};
+
+window.createNewFundraiser = function() { creatingNew = true; showDashboard(); };
+
+window.launchFundraiser = function() {
+  if (isUploading) return showToast('Please wait for image to finish uploading', 'error');
+  const title = document.getElementById('fundTitle')?.value.trim();
+  const target = document.getElementById('fundTarget')?.value;
+  const story = document.getElementById('fundStory')?.value.trim();
+  const country = document.getElementById('fundCountry')?.value || 'UG';
+  const agreed = document.getElementById('agreeTerms')?.checked;
+  if (!title ||!target) return showToast('Fundraiser title and amount are required', 'error');
+  if (!story) return showToast('Please tell your story', 'error');
+  if (!tempPayout) return showToast('Please submit your payout info first', 'error');
+  if (!agreed) return showToast('Please agree to terms to continue', 'error');
+  const id = Date.now().toString();
+  const slug = slugify(title) + '-' + id.slice(-4);
+  const cur = currency(country);
+  fundraisers[id] = { id, userId:currentUser.id, title, slug, country, currency:cur, target:+target, story, media:uploadedImgUrl, payout:tempPayout, status:'approved', raised:0, created:Date.now() };
+  saveData();
+  tempPayout = null;
+  creatingNew = false;
+  showToast('🎉 Fundraiser launched!');
+  showDashboard();
+};
+
+/* ===================================================
+   DONOR PAGE - ALL AFRICAN CODES + ICON TAP
+=================================================== */
+window.showDonorPage = function(slug) {
+  loadData();
+  const f = Object.values(fundraisers).find(x => x.slug === slug);
+  if (!f) {
+    hideAll();
+    document.getElementById('donorPage').classList.remove('hidden');
+    document.getElementById('donorPage').innerHTML = `
+    <div class="pt-6 text-center fade-in">
+      <i class="fa-solid fa-face-frown text-gray-300 text-5xl mb-4"></i>
+      <h2 class="font-black text-gray-700 text-xl">Fundraiser Not Found</h2>
+      <p class="text-gray-400 text-sm mt-2">This link may be expired or incorrect.</p>
+      <button onclick="showHome()" class="mt-6 bg-green text-white font-bold px-6 py-3 rounded-xl btn-press">← Back to Home</button>
+    </div>`;
+    return;
+  }
+
+  const beneficiary = users[f.userId]?.name || 'Beneficiary';
+  const raised = f.raised || 0;
+  const pct = f.target > 0? Math.min(100, Math.round(raised / f.target * 100)) : 0;
+  const left = Math.max(0, f.target - raised);
+  const link = window.location.origin + window.location.pathname + '?f=' + f.slug;
+  const donorCount = Object.values(proofs).filter(p => p.fundId === f.id && p.status === 'approved').length
+                   + Object.values(stripeNotes).filter(s => s.fundId === f.id && s.status === 'approved').length;
+
+  updateMeta(f.title, f.story.substring(0,150), f.media || DEFAULT_IMG, link); // FIX: uploaded image shows on share
+  hideAll();
+  document.getElementById('donorPage').classList.remove('hidden');
+
+  const safeTitle = f.title.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const safeBenef = beneficiary.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+  document.getElementById('donorPage').innerHTML = `
+  <div class="fade-in">
+    <button onclick="showHome()" class="mt-4 mb-4 flex items-center gap-1 text-green text-sm font-semibold hover:underline">
+      <i class="fa-solid fa-arrow-left"></i> All Fundraisers
+    </button>
+
+    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border-gray-100 mb-5">
+      <img src="${f.media||DEFAULT_IMG}" alt="${f.title}" class="w-full h-56 object-cover" loading="lazy">
+      <div class="p-5">
+        <span class="inline-block bg-green-pale text-green text-xs font-bold px-3 py-1 rounded-full mb-3">${f.country} · ${f.currency}</span>
+        <h1 class="text-2xl font-black text-gray-900 leading-tight mb-1">${f.title}</h1>
+        <p class="text-gray-400 text-sm">Organized by <b class="text-gray-700">${beneficiary}</b></p>
+        <div class="flex items-center gap-4 mt-3 text-xs text-gray-400">
+          <span><i class="fa-solid fa-users text-green mr-1"></i>${donorCount} donor(s)</span>
+          <span><i class="fa-solid fa-clock text-green mr-1"></i>${ago(f.created)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border-gray-100 mb-5">
+      <div class="flex justify-between items-end mb-2">
+        <div><p class="text-3xl font-black text-green">${fmtNum(raised)}</p><p class="text-gray-400 text-sm">${f.currency} raised</p></div>
+        <div class="text-right"><p class="text-lg font-bold text-gray-700">${fmtNum(f.target)}</p><p class="text-gray-400 text-sm">goal</p></div>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-4 mb-2"><div class="bg-gradient-to-r from-green to-green-light h-4 rounded-full" style="width:${pct}%"></div></div>
+      <div class="flex justify-between text-xs text-gray-400 mt-1">
+        <span><b class="text-gray-700">${fmtNum(left)} ${f.currency}</b> to go</span>
+        <span><b class="text-gray-700">${donorCount}</b> donations</span>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border-gray-100 mb-5">
+      <h3 class="font-black text-gray-900 text-base mb-3"><i class="fa-solid fa-book-open text-green mr-2"></i>About this Fundraiser</h3>
+      <p class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">${f.story}</p>
+    </div>
+
+    <h3 class="font-black text-gray-900 text-lg mb-3 mt-2">
+      <i class="fa-solid fa-hand-holding-heart text-gold mr-2"></i>Choose How to Donate
+    </h3>
+    <p class="text-gray-400 text-xs mb-5">Open to all African countries</p>
+
+    <!-- MTN BLOCK - TAP ICON FIRST -->
+    <div class="bg-white rounded-2xl shadow-sm border-gray-100 overflow-hidden mb-4">
+      <button onclick="toggleMethod('mtn')" class="w-full flex items-center gap-3 p-4 hover:bg-gray-50">
+        <div class="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-mobile-screen text-black text-xl"></i>
+        </div>
+        <div class="flex-1 text-left">
+          <p class="font-bold text-gray-900 text-sm">MTN Mobile Money</p>
+          <p class="text-gray-400 text-xs">Tap to see number & details</p>
+        </div>
+        <i id="mtnChevron" class="fa-solid fa-chevron-down text-gray-400 text-sm method-chevron"></i>
+      </button>
+      <div id="mtnMethod" class="hidden border-t border-gray-100">
+        <div class="m-4 mb-3 bg-yellow-50 border-yellow-200 rounded-xl p-4 text-center">
+          <p class="text-xs text-gray-500 mb-1">Send donations to this MTN number:</p>
+          <p class="text-2xl font-black text-black">${MTN_NUMBER}</p>
+          <p class="text-sm text-gray-700 mt-1">Registered Name: <b>Lubinga Alosious</b></p> <!-- FIX -->
+        </div>
+        <div class="mx-4 mb-5">
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Your Full Name *</label>
+          <input id="mtnDonorName" placeholder="e.g. John Kamau" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-2">
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Your Phone - Any African country</label>
+          <div class="flex gap-2 mb-2">
+            <select id="mtnDonorCode" class="bg-gray-100 border-gray-200 rounded-xl px-2 py-3 text-sm">
+              ${AFRICAN_CODES.map(c=>`<option value="${c.code}">${c.code} ${c.name}</option>`).join('')} <!-- ALL AFRICA -->
+            </select>
+            <input id="mtnDonorPhone" placeholder="700123456" inputmode="numeric" maxlength="9" class="flex-1 border-gray-200 rounded-xl px-4 py-3 text-sm">
+          </div>
+          <label class="flex items-center gap-2 mb-3 cursor-pointer">
+            <input type="checkbox" id="mtnAnon" onchange="toggleAnon('mtn')" class="w-4 h-4 rounded accent-green">
+            <span class="text-xs text-gray-600">I want to remain <b>Anonymous</b></span>
+          </label>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">MTN Confirmation SMS *</label>
+          <textarea id="mtnProofText" rows="5" placeholder="Paste full SMS from MTN here" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm resize-none proof-textarea mb-3"></textarea>
+          <button onclick="submitMobileProof('${f.id}', 'mtn')" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-black py-3.5 rounded-2xl btn-press text-sm">Submit MTN Proof</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIRTEL BLOCK - TAP ICON FIRST -->
+    <div class="bg-white rounded-2xl shadow-sm border-gray-100 overflow-hidden mb-4">
+      <button onclick="toggleMethod('airtel')" class="w-full flex items-center gap-3 p-4 hover:bg-gray-50">
+        <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-mobile-screen text-white text-xl"></i>
+        </div>
+        <div class="flex-1 text-left">
+          <p class="font-bold text-gray-900 text-sm">Airtel Money</p>
+          <p class="text-gray-400 text-xs">Tap to see number & details</p>
+        </div>
+        <i id="airtelChevron" class="fa-solid fa-chevron-down text-gray-400 text-sm method-chevron"></i>
+      </button>
+      <div id="airtelMethod" class="hidden border-t border-gray-100">
+        <div class="m-4 mb-3 bg-red-50 border-red-200 rounded-xl p-4 text-center">
+          <p class="text-xs text-gray-500 mb-1">Send donations to this Airtel number:</p>
+          <p class="text-2xl font-black text-black">${AIRTEL_NUMBER}</p>
+          <p class="text-sm text-gray-700 mt-1">Registered Name: <b>Lubinga Alosious</b></p> <!-- FIX -->
+        </div>
+        <div class="mx-4 mb-5">
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Your Full Name *</label>
+          <input id="airtelDonorName" placeholder="e.g. Amina Wanjiru" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm mb-2">
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Your Phone - Any African country</label>
+          <div class="flex gap-2 mb-2">
+            <select id="airtelDonorCode" class="bg-gray-100 border-gray-200 rounded-xl px-2 py-3 text-sm">
+              ${AFRICAN_CODES.map(c=>`<option value="${c.code}">${c.code} ${c.name}</option>`).join('')} <!-- ALL AFRICA -->
+            </select>
+            <input id="airtelDonorPhone" placeholder="700123456" inputmode="numeric" maxlength="9" class="flex-1 border-gray-200 rounded-xl px-4 py-3 text-sm">
+          </div>
+          <label class="flex items-center gap-2 mb-3 cursor-pointer">
+            <input type="checkbox" id="airtelAnon" onchange="toggleAnon('airtel')" class="w-4 h-4 rounded accent-green">
+            <span class="text-xs text-gray-600">I want to remain <b>Anonymous</b></span>
+          </label>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Airtel Confirmation SMS *</label>
+          <textarea id="airtelProofText" rows="5" placeholder="Paste full SMS from Airtel here" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm resize-none proof-textarea mb-3"></textarea>
+          <button onclick="submitMobileProof('${f.id}', 'airtel')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-2xl btn-press text-sm">Submit Airtel Proof</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRIPE BLOCK - NO CHANGES -->
+    <div class="bg-white rounded-2xl shadow-sm border-gray-100 overflow-hidden mb-5">
+      <button onclick="toggleMethod('stripe')" class="w-full flex items-center gap-3 p-4 hover:bg-gray-50">
+        <div class="w-12 h-12 bg-[#635BFF] rounded-xl flex items-center justify-center shrink-0">
+          <i class="fab fa-stripe text-white text-xl"></i>
+        </div>
+        <div class="flex-1 text-left">
+          <p class="font-bold text-gray-900 text-sm">Stripe / Card Payment</p>
+          <p class="text-gray-400 text-xs">Visa · Mastercard · International</p>
+        </div>
+        <i id="stripeChevron" class="fa-solid fa-chevron-down text-gray-400 text-sm method-chevron"></i>
+      </button>
+      <div id="stripeMethod" class="hidden border-t border-gray-100">
+        <div class="mx-4 mb-5 space-y-3">
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">I am donating to *</label><input id="stripeRecipient" value="${beneficiary}" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm"></div>
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">Fundraiser Project *</label><input id="stripeProject" value="${f.title}" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm"></div>
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">Amount I Am Donating *</label><input id="stripeAmount" type="number" placeholder="e.g. 20" inputmode="decimal" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm"></div>
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">Your Full Name *</label><input id="stripeDonorName" placeholder="e.g. James Omondi" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm"></div>
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">Email Address (optional)</label><input id="stripeDonorEmail" type="email" placeholder="your@email.com" class="w-full border-gray-200 rounded-xl px-4 py-3 text-sm"></div>
+          <button onclick="submitStripeNote('${f.id}')" id="stripeSubmitBtn" class="w-full bg-[#635BFF] hover:bg-indigo-700 text-white font-black py-4 rounded-2xl btn-press text-sm">
+            <i class="fa-solid fa-lock mr-2"></i>Submit Details & Proceed to Pay
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-r from-green to-green-light rounded-2xl p-5 text-center mb-5">
+      <p class="text-white font-bold text-sm mb-1">Help ${beneficiary} reach their goal</p>
+      <p class="text-white/70 text-xs mb-4">Share this fundraiser</p>
+      <button onclick="shareNative('${link}', '${safeTitle}', '${safeBenef}')" class="w-full bg-white/20 text-white font-bold py-2.5 rounded-xl btn-press text-sm hover:bg-white/30">
+        <i class="fa-solid fa-share-nodes mr-1"></i>Share via WhatsApp, Facebook, Twitter...
+      </button>
+    </div>
+  </div>`;
+};
+/* Toggle payment method accordion */
+window.toggleMethod = function(method) {
+  const methods = ['mtn', 'airtel', 'stripe'];
+  methods.forEach(m => {
+    const panel = document.getElementById(m + 'Method');
+    const chevron = document.getElementById(m + 'Chevron');
+    if (m === method) {
+      const isOpen =!panel.classList.contains('hidden');
+      if (isOpen) {
+        panel.classList.add('hidden');
+        chevron?.classList.remove('open');
+      } else {
+        panel.classList.remove('hidden');
+        chevron?.classList.add('open');
+      }
+    } else {
+      panel?.classList.add('hidden');
+      chevron?.classList.remove('open');
+    }
+  });
+};
+
+/* Anonymous toggle */
+window.toggleAnon = function(prefix) {
+  const isAnon = document.getElementById(prefix + 'Anon')?.checked;
+  const nameEl = document.getElementById(prefix + 'DonorName');
+  if (!nameEl) return;
+  if (isAnon) { nameEl.value = 'Anonymous'; nameEl.disabled = true; }
+  else { if (nameEl.value === 'Anonymous') nameEl.value = ''; nameEl.disabled = false; }
+};
+
+/* ── Mobile Money Proof - ALL AFRICAN CODES ── */
+window.submitMobileProof = function(fundId, network) {
+  const nameEl = document.getElementById(network + 'DonorName');
+  const codeEl = document.getElementById(network + 'DonorCode'); // AFRICAN_CODES
+  const phoneEl = document.getElementById(network + 'DonorPhone');
+  const proofEl = document.getElementById(network + 'ProofText');
+  const name = nameEl?.value.trim();
+  const code = codeEl?.value || '+256';
+  const phone9 = cleanPhone9(phoneEl?.value || '');
+  const proof = proofEl?.value.trim();
+
+  if (!name) return showToast('Please enter your name', 'error');
+  if (!proof) return showToast('Please paste your telecom confirmation SMS', 'error');
+  if (phone9 && phone9.length!== 9) return showToast('Phone must be 9 digits', 'error');
+  if (proof.length < 20) return showToast('Message too short. Paste the full SMS', 'error');
+
+  const fund = Object.values(fundraisers).find(f => f.id === fundId);
+  const id = Date.now().toString();
+  proofs[id] = {
+    id, fundId, network: network.toUpperCase(),
+    donorName: name, donorPhone: code + phone9, // full with country code
+    proofText: proof, status: 'pending',
+    submitted: Date.now(), slug: fund?.slug || ''
+  };
+  saveData();
+
+  nameEl.value = ''; phoneEl.value = ''; proofEl.value = '';
+  const anonEl = document.getElementById(network + 'Anon');
+  if (anonEl) anonEl.checked = false;
+  showToast(network.toUpperCase() + ' proof submitted ✓ Admin will verify shortly');
+};
+
+/* ── Stripe Donation Note - NO CHANGES ── */
+window.submitStripeNote = function(fundId) {
+  const recipient = document.getElementById('stripeRecipient')?.value.trim();
+  const project = document.getElementById('stripeProject')?.value.trim();
+  const amount = document.getElementById('stripeAmount')?.value.trim();
+  const name = document.getElementById('stripeDonorName')?.value.trim();
+  const email = document.getElementById('stripeDonorEmail')?.value.trim();
+  const btn = document.getElementById('stripeSubmitBtn');
+
+  if (!recipient) return showToast('Enter the name of person you are donating to', 'error');
+  if (!project) return showToast('Enter the fundraiser project name', 'error');
+  if (!amount || isNaN(+amount) || +amount <= 0) return showToast('Enter the amount you are donating', 'error');
+  if (!name) return showToast('Enter your full name', 'error');
+
+  const fund = Object.values(fundraisers).find(f => f.id === fundId);
+  const id = Date.now().toString();
+  stripeNotes[id] = {
+    id, fundId, recipient, project, amount: +amount,
+    donorName: name, donorEmail: email || '',
+    status: 'pending', submitted: Date.now(),
+    slug: fund?.slug || ''
+  };
+  saveData();
+
+  btn.innerHTML = '<i class="fab fa-stripe mr-2"></i>Go to Payment Page';
+  btn.className = btn.className.replace('bg-[#635BFF] hover:bg-indigo-700', 'bg-green hover:bg-green-light');
+  btn.onclick = () => window.open(STRIPE_LINK, '_blank');
+  showToast('Details saved ✓ Redirecting to Stripe...');
+  setTimeout(() => window.open(STRIPE_LINK, '_blank'), 900);
+};
+
+/* NATIVE SHARE - permanent links */
+window.shareNative = async function(link, title, name) {
+  const shareData = {
+    title: title,
+    text: `Please support ${name}'s fundraiser 🙏\n\n"${title}"`,
+    url: link
+  };
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      copyLink(link);
+      showToast('Link copied. Share it manually.');
+    }
+  } catch (err) {
+    console.log('Share cancelled', err);
+  }
+};
+
+window.copyLink = function(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied-flash');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied-flash'); }, 1500);
+    }
+    showToast('Copied to clipboard');
+  }).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('Copied!');
+  });
+};
+
+/* ===================================================
+   DELETE FUNDRAISER - USER CAN DELETE ANYTIME
+=================================================== */
+window.deleteFundraiser = function(fundId) {
+  if (!confirm('Are you sure you want to permanently delete this project? All related donations will also be removed.')) return;
+  delete fundraisers[fundId];
+  // delete related proofs
+  Object.keys(proofs).forEach(k => { if(proofs[k].fundId === fundId) delete proofs[k]; });
+  // delete related stripe notes
+  Object.keys(stripeNotes).forEach(k => { if(stripeNotes[k].fundId === fundId) delete stripeNotes[k]; });
+  saveData();
+  showToast('Project deleted successfully');
+  showDashboard();
+};
+
+/* ===================================================
+   ADMIN PANEL - WITH DELETE BUTTONS
+=================================================== */
+window.showAdmin = function() {
+  if (currentUser?.id!== 'admin') { showHome(); return; }
+  loadData();
+  hideAll();
+  document.getElementById('admin').classList.remove('hidden');
+
+  const pendingProofs = Object.values(proofs).filter(p => p.status === 'pending');
+  const allProofs = Object.values(proofs).sort((a,b) => b.submitted - a.submitted);
+  const pendingStripe = Object.values(stripeNotes).filter(s => s.status === 'pending');
+  const allStripe = Object.values(stripeNotes).sort((a,b) => b.submitted - a.submitted);
+  const allFunds = Object.values(fundraisers).sort((a,b) => b.created - a.created);
+
+  const statsHTML = `
+    <div class="grid grid-cols-2 gap-3 mb-6">
+      ${[
+        { icon:'fa-solid fa-list', label:'Fundraisers', val: allFunds.length, color:'text-green' },
+        { icon:'fa-solid fa-clock', label:'MM Proofs Pending', val: pendingProofs.length, color:'text-yellow-600' },
+        { icon:'fab fa-stripe', label:'Stripe Pending', val: pendingStripe.length, color:'text-indigo-600' },
+        { icon:'fa-solid fa-users', label:'Users', val: Object.values(users).length, color:'text-blue-600' }
+      ].map(s=>`
+        <div class="bg-white rounded-2xl p-4 shadow-sm border-gray-100 text-center">
+          <i class="${s.icon} ${s.color} text-xl mb-2"></i>
+          <p class="font-black ${s.color} text-2xl">${s.val}</p>
+          <p class="text-gray-400 text-xs">${s.label}</p>
+        </div>`).join('')}
+    </div>`;
+
+  /* ── Mobile Money Proofs with DELETE ── */
+  const proofsHTML = allProofs.length > 0
+  ? allProofs.map(p => {
+        const fund = fundraisers[p.fundId];
+        const badgeColor = p.status === 'approved'? 'bg-green-pale text-green' : p.status === 'rejected'? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-700';
+        const netBadge = p.network === 'MTN'? 'bg-yellow-400 text-black' : 'bg-red-600 text-white';
+        return `
+        <div class="bg-white rounded-2xl border ${p.status==='pending'?'border-yellow-300':'border-gray-100'} p-4 mb-3">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-xs font-black px-2 py-0.5 rounded-full ${netBadge}">${p.network||'MM'}</span>
+                <p class="font-bold text-sm text-gray-900">${p.donorName}</p>
+              </div>
+              <p class="text-xs text-gray-400">Phone: ${p.donorPhone||'N/A'} · ${ago(p.submitted)}</p>
+            </div>
+            <div class="flex gap-1">
+              <span class="text-xs font-bold px-2 py-1 rounded-full ${badgeColor}">${p.status}</span>
+              <button onclick="deleteProof('${p.id}')" class="text-xs bg-red-100 text-red-600 font-bold px-2 py-1 rounded-full hover:bg-red-200">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 mb-3">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Fundraiser:</p>
+            <p class="text-xs text-green font-bold">${fund?.title||'Unknown'}</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 mb-3">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Telecom Proof SMS:</p>
+            <p class="text-xs text-gray-700 font-mono leading-relaxed whitespace-pre-wrap break-all">${p.proofText}</p>
+          </div>
+          ${p.status === 'pending'? `
+          <div class="space-y-2">
+            <p class="text-xs text-gray-500 font-semibold">Enter confirmed amount, then Approve:</p>
+            <div class="flex gap-2">
+              <input id="amt_${p.id}" type="number" placeholder="Amount in ${fund?.currency||'UGX'}" inputmode="numeric" class="flex-1 border-gray-200 rounded-xl px-3 py-2.5 text-sm">
+              <button onclick="approveProof('${p.id}')" class="bg-green text-white font-bold px-4 py-2.5 rounded-xl btn-press text-sm">
+                <i class="fa-solid fa-check mr-1"></i>Approve
+              </button>
+            </div>
+            <button onclick="rejectProof('${p.id}')" class="w-full border border-red-200 text-red-500 font-semibold py-2 rounded-xl btn-press text-xs hover:bg-red-50">Reject Proof</button>
+          </div>` : p.amount? `<p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-coins text-green mr-1"></i>Amount: <b>${fmtNum(p.amount)} ${fund?.currency||''}</b></p>` : ''}
+        </div>`;
+      }).join('')
+    : `<div class="bg-white rounded-2xl p-8 text-center border-gray-100"><i class="fa-solid fa-inbox text-gray-300 text-4xl mb-3"></i><p class="text-gray-400 text-sm">No mobile money proofs yet</p></div>`;
+
+  /* ── Stripe Notes with DELETE ── */
+  const stripeHTML = allStripe.length > 0
+  ? allStripe.map(s => {
+        const fund = fundraisers[s.fundId];
+        const badgeColor = s.status === 'approved'? 'bg-green-pale text-green' : s.status === 'rejected'? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700';
+        return `
+        <div class="bg-white rounded-2xl border ${s.status==='pending'?'border-indigo-300':'border-gray-100'} p-4 mb-3">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-xs font-black px-2 py-0.5 rounded-full bg-[#635BFF] text-white">Stripe</span>
+                <p class="font-bold text-sm text-gray-900">${s.donorName}</p>
+              </div>
+              <p class="text-xs text-gray-400">${s.donorEmail||'No email'} · ${ago(s.submitted)}</p>
+            </div>
+            <div class="flex gap-1">
+              <span class="text-xs font-bold px-2 py-1 rounded-full ${badgeColor}">${s.status}</span>
+              <button onclick="deleteStripeNote('${s.id}')" class="text-xs bg-red-100 text-red-600 font-bold px-2 py-1 rounded-full hover:bg-red-200">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="bg-gray-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-0.5">Donating To</p>
+              <p class="text-xs font-bold text-gray-800">${s.recipient}</p>
+            </div>
+            <div class="bg-indigo-50 rounded-xl p-3">
+              <p class="text-xs text-gray-400 mb-0.5">Stated Amount</p>
+              <p class="text-xs font-black text-indigo-700">${fmtNum(s.amount)}</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 mb-3">
+            <p class="text-xs font-semibold text-gray-500 mb-1">Project:</p>
+            <p class="text-xs text-green font-bold">${s.project}</p>
+          </div>
+          ${s.status === 'pending'? `
+          <div class="space-y-2">
+            <p class="text-xs text-gray-500 font-semibold">Verify payment, enter confirmed amount, then Confirm:</p>
+            <div class="flex gap-2">
+              <input id="stripeAmt_${s.id}" type="number" placeholder="Confirmed amount" inputmode="numeric" class="flex-1 border-gray-200 rounded-xl px-3 py-2.5 text-sm">
+              <button onclick="approveStripeNote('${s.id}')" class="bg-[#635BFF] text-white font-bold px-4 py-2.5 rounded-xl btn-press text-sm">
+                <i class="fa-solid fa-check mr-1"></i>Confirm
+              </button>
+            </div>
+            <button onclick="rejectStripeNote('${s.id}')" class="w-full border-red-200 text-red-500 font-semibold py-2 rounded-xl btn-press text-xs hover:bg-red-50">Reject</button>
+          </div>` : s.amount? `<p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-coins text-green mr-1"></i>Confirmed: <b>${fmtNum(s.amount)}</b></p>` : ''}
+        </div>`;
+      }).join('')
+    : `<div class="bg-white rounded-2xl p-8 text-center border-gray-100"><i class="fab fa-stripe text-gray-300 text-4xl mb-3"></i><p class="text-gray-400 text-sm">No Stripe donation notes yet</p></div>`;
+
+  /* ── Fundraisers list ── */
+  const fundsHTML = allFunds.map(f => {
+    const owner = users[f.userId];
+    const raised = f.raised || 0;
+    const pct = f.target > 0? Math.min(100, Math.round(raised/f.target*100)) : 0;
+    const pd = f.payout;
+    const payoutInfo = pd? (pd.type==='Mobile'? `${pd.provider}: ${pd.number} (${pd.names})` : `${pd.bankName} – ${pd.bankAccount} (${pd.bankHolder})`) : 'No payout info';
+    return `
+    <div class="bg-white rounded-2xl border-gray-100 p-4 mb-3">
+      <div class="flex items-start gap-3 mb-3">
+        <img src="${f.media||DEFAULT_IMG}" alt="" class="w-16 h-16 rounded-xl object-cover shrink-0" loading="lazy">
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm text-gray-900 truncate">${f.title}</p>
+          <p class="text-xs text-gray-400">${f.country} · ${f.currency} · ${ago(f.created)}</p>
+          <p class="text-xs text-gray-400 mt-0.5">by ${owner?.name||'Unknown'}</p>
+        </div>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+        <div class="bg-gradient-to-r from-green to-green-light h-2 rounded-full" style="width:${pct}%"></div>
+      </div>
+      <div class="flex justify-between text-xs mb-3">
+        <span class="text-green font-bold">${fmtNum(raised)} / ${fmtNum(f.target)} ${f.currency}</span>
+        <span class="text-gray-400">${pct}%</span>
+      </div>
+      <div class="bg-gold-pale border-gold/30 rounded-xl p-3 mb-3">
+        <p class="text-xs font-semibold text-gray-700 mb-1"><i class="fa-solid fa-university text-gold mr-1"></i>Payout:</p>
+        <p class="text-xs text-gray-600 font-mono break-all">${payoutInfo}</p>
+      </div>
+      <div class="flex gap-2 items-center">
+        <input id="manualAmt_${f.id}" type="number" placeholder="Add amount" inputmode="numeric" class="flex-1 border-gray-200 rounded-xl px-3 py-2 text-sm">
+        <button onclick="manualUpdateFund('${f.id}')" class="bg-green text-white font-bold px-3 py-2 rounded-xl btn-press text-xs">Update</button>
+      </div>
+    </div>`;
+  }).join('') || `<div class="bg-white rounded-2xl p-6 text-center border-gray-100"><p class="text-gray-400 text-sm">No fundraisers yet</p></div>`;
+
+  document.getElementById('admin').innerHTML = `
+  <div class="fade-in pt-4">
+    <div class="bg-gradient-to-r from-green to-green-light rounded-2xl p-5 mb-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-white/60 text-xs uppercase tracking-widest">Admin Panel</p>
+          <h2 class="font-black text-xl">${ADMIN_NAME}</h2>
+        </div>
+        <button onclick="logout()" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl btn-press">Logout</button>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4 text-xs">
+        <span class="bg-white/20 rounded-full px-3 py-1">MTN: ${MTN_NUMBER}</span>
+        <span class="bg-white/20 rounded-full px-3 py-1">Airtel: ${AIRTEL_NUMBER}</span>
+      </div>
+    </div>
+    ${statsHTML}
+    <div class="flex bg-white rounded-2xl p-1 shadow-sm border-gray-100 mb-5 gap-1">
+      <button id="adminTab_proofs" onclick="adminTab('proofs')" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-green text-white">MM Proofs ${pendingProofs.length > 0? `<span class="bg-white/30 text-xs px-1.5 py-0.5 rounded-full ml-1">${pendingProofs.length}</span>` : ''}</button>
+      <button id="adminTab_stripe" onclick="adminTab('stripe')" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-500">Stripe ${pendingStripe.length > 0? `<span class="bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded-full ml-1">${pendingStripe.length}</span>` : ''}</button>
+      <button id="adminTab_funds" onclick="adminTab('funds')" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-500">Fundraisers</button>
+    </div>
+    <div id="adminProofsSection">${proofsHTML}</div>
+    <div id="adminStripeSection" class="hidden">${stripeHTML}</div>
+    <div id="adminFundsSection" class="hidden">${fundsHTML}</div>
+  </div>`;
+};
+
+function adminTab(tab) {
+  const tabs = ['proofs', 'stripe', 'funds'];
+  const secMap = { proofs:'adminProofsSection', stripe:'adminStripeSection', funds:'adminFundsSection' };
+  tabs.forEach(t => {
+    const btn = document.getElementById('adminTab_' + t);
+    const sec = document.getElementById(secMap[t]);
+    if (t === tab) {
+      btn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-green text-white';
+      sec?.classList.remove('hidden');
+    } else {
+      btn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-500';
+      sec?.classList.add('hidden');
+    }
+  });
+}
+
+window.approveProof = function(proofId) {
+  const p = proofs[proofId];
+  if (!p) return;
+  const amtEl = document.getElementById('amt_' + proofId);
+  const amt = parseFloat(amtEl?.value);
+  if (!amt || amt <= 0) return showToast('Enter the confirmed donation amount', 'error');
+  p.status = 'approved';
+  p.amount = amt;
+  p.approvedAt = Date.now();
+  const fund = fundraisers[p.fundId];
+  if (fund) fund.raised = (fund.raised||0) + amt;
+  saveData();
+  showToast('Proof approved ✓');
+  showAdmin();
+};
+
+window.rejectProof = function(proofId) {
+  if (!confirm('Reject this donation proof?')) return;
+  proofs[proofId].status = 'rejected';
+  proofs[proofId].rejectedAt = Date.now();
+  saveData();
+  showToast('Proof rejected');
+  showAdmin();
+};
+
+window.deleteProof = function(proofId) {
+  if (!confirm('Permanently delete this proof message?')) return;
+  delete proofs[proofId];
+  saveData();
+  showToast('Proof deleted');
+  showAdmin();
+};
+
+window.approveStripeNote = function(noteId) {
+  const s = stripeNotes[noteId];
+  if (!s) return;
+  const amtEl = document.getElementById('stripeAmt_' + noteId);
+  const amt = parseFloat(amtEl?.value);
+  if (!amt || amt <= 0) return showToast('Enter the confirmed donation amount', 'error');
+  s.status = 'approved';
+  s.amount = amt;
+  s.approvedAt = Date.now();
+  const fund = fundraisers[s.fundId];
+  if (fund) fund.raised = (fund.raised||0) + amt;
+  saveData();
+  showToast('Stripe donation confirmed ✓');
+  showAdmin();
+};
+
+window.rejectStripeNote = function(noteId) {
+  if (!confirm('Mark this Stripe note as rejected?')) return;
+  stripeNotes[noteId].status = 'rejected';
+  stripeNotes[noteId].rejectedAt = Date.now();
+  saveData();
+  showToast('Stripe note rejected');
+  showAdmin();
+};
+
+window.deleteStripeNote = function(noteId) {
+  if (!confirm('Permanently delete this Stripe message?')) return;
+  delete stripeNotes[noteId];
+  saveData();
+  showToast('Stripe note deleted');
+  showAdmin();
+};
+
+window.manualUpdateFund = function(fundId) {
+  const amtEl = document.getElementById('manualAmt_' + fundId);
+  const amt = parseFloat(amtEl?.value);
+  if (!amt || amt <= 0) return showToast('Enter a valid amount', 'error');
+  const fund = fundraisers[fundId];
+  if (!fund) return;
+  fund.raised = (fund.raised||0) + amt;
+  saveData();
+  showToast('Fundraiser updated ✓');
+  showAdmin();
+};
+
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('ym_toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ym_toast';
+    toast.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);z-index:9999;transition:all 0.3s ease;opacity:0;pointer-events:none;max-width:90vw;';
+    document.body.appendChild(toast);
+  }
+  const bg = type === 'error'? 'bg-red-500' : 'bg-gray-900';
+  toast.innerHTML = `<div class="${bg} text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-2xl text-center">${msg}</div>`;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 3000);
+}
+</script>
+</body></html>
 
